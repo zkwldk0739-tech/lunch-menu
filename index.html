@@ -41,7 +41,7 @@
     .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
     .rest-select-btn.active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
     
-    /* 🎲 룰렛 대체: 랜덤 바운스 애니메이션 스타일 */
+    /* 🎲 랜덤 바운스 애니메이션 스타일 */
     .rest-select-btn.highlight {
       background: #ff9f43 !important;
       color: #ffffff !important;
@@ -122,7 +122,6 @@
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
-    <!-- 🎲 버튼 전광판 방식 식당 뽑기 -->
     <div class="random-box">
       <button class="spin-btn" id="spinBtn" onclick="spinRandomRest()">🎲 식당 랜덤 뽑기!</button>
     </div>
@@ -205,7 +204,6 @@
     }
   }
 
-  // 🔒 기기 고정 및 최초 비밀번호 설정 로직
   function renderNameGrid() {
     const nameGrid = document.getElementById("nameGrid");
     const nameInput = document.getElementById("userName");
@@ -244,7 +242,6 @@
     });
   }
 
-  // 🔒 비밀번호 입력 후 이름 변경 기능
   function resetMyName() {
     const savedName = localStorage.getItem("lunchUserNameFixed");
     const savedPin = localStorage.getItem("lunchUserPin");
@@ -272,7 +269,6 @@
     setInterval(updateTimer, 1000);
   };
 
-  // 🎲 1초 짧아진 속도의 전광판 랜더링 애니메이션
   function spinRandomRest() {
     const spinBtn = document.getElementById('spinBtn');
     const buttons = Array.from(document.querySelectorAll('.rest-select-btn')).filter(b => !b.classList.contains('no-lunch'));
@@ -281,8 +277,8 @@
 
     spinBtn.disabled = true;
     let count = 0;
-    const maxCount = 16; // 기존 25회에서 16회로 감소 (약 1초 단축)
-    let speed = 60; // 속도(ms)
+    const maxCount = 16;
+    let speed = 60;
 
     function highlightNext() {
       buttons.forEach(b => b.classList.remove('highlight'));
@@ -385,21 +381,16 @@
     });
   }
 
+  // ⚡ 비밀번호 입력 없이 클릭 한 번으로 바로 취소/삭제
   function deleteStatus(docId) {
-    const myName = localStorage.getItem("lunchUserNameFixed");
-    if (docId !== myName) {
-      alert("❌ 타인의 제출 내역은 삭제할 수 없습니다!");
-      return;
-    }
-
-    if (confirm(`${docId}님의 등록을 삭제하시겠습니까?`)) {
+    if (confirm(`${docId}님의 등록을 취소하시겠습니까?`)) {
       db.collection("lunch").doc(docId).delete().then(() => {
-        alert("삭제되었습니다.");
+        alert("취소되었습니다.");
       });
     }
   }
 
-  // 🗑️ 오늘 현황 전체 삭제 기능 (비밀번호: 0410)
+  // 🗑️ 오늘 현황 전체 삭제 (비밀번호: 0410)
   function clearAllStatus() {
     const adminPwd = prompt("전체 삭제를 위한 관리자 비밀번호를 입력해주세요:");
     if (adminPwd === "0410") {
