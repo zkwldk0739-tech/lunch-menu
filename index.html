@@ -13,11 +13,11 @@
     body { background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
     .container { width: 100%; max-width: 480px; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
     
-    h1 { font-size: 1.6rem; color: #111827; margin-bottom: 4px; text-align: center; font-weight: 800; }
-    .sub-title { font-size: 0.85rem; color: #6b7280; text-align: center; font-weight: 600; margin-bottom: 8px; }
+    h1 { font-size: 1.6rem; color: #111827; margin-bottom: 12px; text-align: center; font-weight: 800; }
     
     .timer-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 10px; text-align: center; font-weight: 800; color: #dc2626; font-size: 0.95rem; margin-bottom: 20px; }
     .timer-box.active { background: #fee2e2; border-color: #ef4444; animation: pulse 1.5s infinite; }
+    .timer-box.closed { background: #374151; border-color: #1f2937; color: #f9fafb; animation: none; }
 
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
@@ -28,12 +28,15 @@
     .card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
     .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
 
+    .header-btns { display: flex; gap: 6px; }
+    .admin-btn { font-size: 0.75rem; color: #4f46e5; background: #eeefff; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .lock-toggle-btn { font-size: 0.75rem; color: #dc2626; background: #fef2f2; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+
     /* 👤 이름 선택 버튼 */
     .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .name-btn { flex: 1; min-width: 90px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
     .name-btn.active { background: #6366f1; border-color: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
 
-    .admin-btn { font-size: 0.75rem; color: #4f46e5; background: #eeefff; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
     .logout-btn { font-size: 0.75rem; color: #ef4444; background: #fef2f2; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: none; }
 
     /* 🏪 식당 그리드 */
@@ -58,6 +61,7 @@
     .menu-tag-btn.active { background: #7c3aed; color: #ffffff; border-color: #7c3aed; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3); }
 
     button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); margin-top: 8px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed !important; filter: grayscale(50%); }
 
     /* 🎲 식당 랜덤 뽑기 박스 */
     .random-box { text-align: center; padding: 12px 0 0 0; margin-top: 8px; }
@@ -81,7 +85,7 @@
     .time-stamp { font-size: 0.8rem; color: #9ca3af; text-align: right; }
     .empty-msg { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 0.95rem; }
 
-    /* 📋 직관적인 현장 주문용 요약 카드 강화 스타일 */
+    /* 📋 주문 모아보기 요약 카드 스타일 */
     .summary-card { background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08); }
     .summary-title { font-size: 1rem; color: #15803d; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
     .summary-rest-block { background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
@@ -101,14 +105,16 @@
 
 <div class="container">
   <h1>🍱 오늘의 점심 메뉴</h1>
-  <div class="sub-title">5분 내 메뉴 미선택 시 랜덤 주문</div>
   
   <div class="timer-box" id="timerDisplay">⏱️ 타이머 로딩 중...</div>
 
   <div class="card">
     <div class="card-title">
       👤 내 이름 선택
-      <button class="admin-btn" onclick="manageNames()">⚙️ 이름 관리</button>
+      <div class="header-btns">
+        <button class="lock-toggle-btn" id="lockBtn" onclick="toggleLock()">🔒 마감하기</button>
+        <button class="admin-btn" onclick="manageNames()">⚙️ 이름 관리</button>
+      </div>
     </div>
     <div class="name-grid" id="nameGrid"></div>
     <button class="logout-btn" id="logoutBtn" onclick="logoutUser()">🔓 로그인 해제</button>
@@ -133,16 +139,16 @@
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
-    <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
+    <button class="primary-btn" id="submitBtn" onclick="addStatus()">출발 알리기 🚀</button>
 
     <div class="random-box">
       <button class="spin-btn" id="spinBtn" onclick="spinRandomRest()">🎲 식당 랜덤 뽑기!</button>
     </div>
   </div>
 
-  <!-- 📋 현장 주문용 직관적 요약 카드 -->
+  <!-- 📋 오늘 주문 모아보기 요약 카드 -->
   <div class="summary-card" id="summaryCard" style="display: none;">
-    <div class="summary-title">📋 식당 현장 주문용 요약</div>
+    <div class="summary-title">📋 오늘 주문 모아보기</div>
     <div id="summaryContent"></div>
   </div>
 
@@ -166,6 +172,7 @@
   };
 
   let teamMembers = JSON.parse(localStorage.getItem("lunchTeamMembers")) || Object.keys(defaultPins);
+  let isManualLock = false;
 
   const restaurants = [
     { name: '제주국수', url: 'https://map.naver.com/p/entry/place/17924427', menus: ['멸치 고기국수', '닭곰탕', '순두부', '고기국수', '고기국수 (양 많이)'] },
@@ -213,15 +220,28 @@
     });
   }
 
-  function updateTimer() {
+  function listenLockStatus() {
+    db.collection("settings").doc("lunchLock").onSnapshot(doc => {
+      if (doc.exists) {
+        isManualLock = doc.data().isClosed || false;
+      } else {
+        isManualLock = false;
+      }
+      checkTimerAndLock();
+    });
+  }
+
+  function checkTimerAndLock() {
     const now = new Date();
     const timerBox = document.getElementById("timerDisplay");
-
+    
     const start = new Date(now);
     start.setHours(12, 0, 0, 0);
 
     const end = new Date(now);
     end.setHours(12, 5, 0, 0);
+
+    let isTimeClosed = false;
 
     if (now < start) {
       timerBox.className = "timer-box";
@@ -231,10 +251,46 @@
       const m = Math.floor(diffSec / 60);
       const s = diffSec % 60;
       timerBox.className = "timer-box active";
-      timerBox.innerHTML = `🚨 랜덤 주문 마감까지: 0${m}:${s < 10 ? '0' : ''}${s} 🚨`;
+      timerBox.innerHTML = `🚨 주문 마감까지: 0${m}:${s < 10 ? '0' : ''}${s}`;
     } else {
-      timerBox.className = "timer-box";
-      timerBox.innerHTML = `⚠️ 12:05 마감 완료 (미선택 시 자동 랜덤 주문)`;
+      isTimeClosed = true;
+    }
+
+    const finalClosed = isManualLock || isTimeClosed;
+    applyLockUI(finalClosed, isTimeClosed);
+  }
+
+  function applyLockUI(isClosed, isTimeClosed) {
+    const timerBox = document.getElementById("timerDisplay");
+    const lockBtn = document.getElementById("lockBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const spinBtn = document.getElementById("spinBtn");
+    const restBtns = document.querySelectorAll(".rest-select-btn");
+
+    if (isClosed) {
+      timerBox.className = "timer-box closed";
+      timerBox.innerText = isTimeClosed ? "🚨 12:05 마감 완료되었습니다" : "🚨 관리자에 의해 선택이 마감되었습니다";
+      submitBtn.disabled = true;
+      spinBtn.disabled = true;
+      restBtns.forEach(btn => btn.disabled = true);
+    } else {
+      submitBtn.disabled = false;
+      spinBtn.disabled = false;
+      restBtns.forEach(btn => btn.disabled = false);
+    }
+
+    lockBtn.innerText = isManualLock ? "🔓 마감 해제" : "🔒 마감하기";
+  }
+
+  function toggleLock() {
+    const adminPwd = prompt("마감 상태를 변경하려면 관리자 비밀번호를 입력하세요:");
+    if (adminPwd === "0410") {
+      const nextState = !isManualLock;
+      db.collection("settings").doc("lunchLock").set({ isClosed: nextState }).then(() => {
+        alert(nextState ? "🔒 마감되었습니다." : "🔓 마감이 해제되었습니다.");
+      });
+    } else if (adminPwd !== null) {
+      alert("❌ 관리자 비밀번호가 일치하지 않습니다!");
     }
   }
 
@@ -376,14 +432,16 @@
   window.onload = function() {
     initDefaultUserPins();
     renderNameGrid();
-    updateTimer();
-    setInterval(updateTimer, 1000);
+    listenLockStatus();
+    checkTimerAndLock();
+    setInterval(checkTimerAndLock, 1000);
   };
 
   function spinRandomRest() {
     const spinBtn = document.getElementById('spinBtn');
+    if (spinBtn.disabled) return;
+
     const buttons = Array.from(document.querySelectorAll('.rest-select-btn')).filter(b => !b.classList.contains('no-lunch'));
-    
     if (buttons.length === 0) return;
 
     spinBtn.disabled = true;
@@ -418,6 +476,8 @@
   let selectedMenuName = "";
 
   function selectRest(name, url, menus, btnElement) {
+    if (btnElement.disabled) return;
+    
     document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
     btnElement.classList.add('active');
 
@@ -458,6 +518,11 @@
   const getToday = () => new Date().toISOString().slice(0, 10);
 
   function addStatus() {
+    if (document.getElementById('submitBtn').disabled) {
+      alert("현재 점심 선택이 마감되었습니다.");
+      return;
+    }
+
     const name = document.getElementById("userName").value;
     let restName = selectedRestName;
     let restUrl = selectedRestUrl;
@@ -569,7 +634,6 @@
 
       listEl.innerHTML = html;
 
-      // 3. 직관적인 요약 카드 렌더링
       let summaryHtml = "";
       const rests = Object.keys(summaryData);
 
