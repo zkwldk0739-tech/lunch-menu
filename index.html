@@ -249,6 +249,12 @@
 
     let isClosedFinal = false;
 
+    // 12:30 이후가 되면 DB의 수동 마감 상태도 'auto'로 자동 복구
+    if (now >= lockEnd && lockState === 'closed') {
+      db.collection("settings").doc("lunchLock").set({ state: 'auto' });
+      lockState = 'auto';
+    }
+
     if (lockState === 'closed') {
       isClosedFinal = true;
       timerBox.className = "timer-box closed";
@@ -307,6 +313,7 @@
     const adminPwd = prompt("마감 상태를 변경하려면 관리자 비밀번호를 입력하세요:");
     if (adminPwd === "0410") {
       const isCurrentlyClosed = document.getElementById("submitBtn").disabled;
+      // 현재 닫혀있다면 무조건 강제 오픈('open'), 열려있다면 강제 마감('closed')
       const nextState = isCurrentlyClosed ? 'open' : 'closed';
 
       db.collection("settings").doc("lunchLock").set({ state: nextState }).then(() => {
