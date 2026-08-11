@@ -478,8 +478,8 @@
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // 🚨 12:05 이후 제출인지 여부 판별 (12:05 ~ 23:59 또는 00:00 ~ 11:59)
-    const isLate = (hours === 12 && minutes >= 5) || hours > 12 || hours < 12;
+    // 🚨 12:00 ~ 12:05 범위를 벗어나면 지각 제출로 처리
+    const isLate = (hours !== 12) || (hours === 12 && minutes >= 5);
 
     const timeString = hours.toString().padStart(2, '0') + ":" + 
                        minutes.toString().padStart(2, '0');
@@ -496,7 +496,7 @@
       url: restUrl,
       time: timeString,
       date: getToday(),
-      isLate: isLate, // 12:05 이후 제출 여부 저장
+      isLate: isLate,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
       if (!isLate) {
@@ -558,7 +558,7 @@
         const isSkip = item.rest.includes('점심 패스');
         const myName = document.getElementById("userName").value;
         const isMine = item.name === myName;
-        const isLate = item.isLate || false; // 지각 제출 여부
+        const isLate = item.isLate || false;
         
         // 실시간 목록 표시 (지각 제출 시 표기)
         html += `
@@ -577,7 +577,7 @@
           </li>
         `;
 
-        // 🔥 핵심: 12:05 이전 정당 제출 건만 '주문 모아보기'(주문서)에 합산
+        // 12:05 이전 정당 제출 건만 '주문 모아보기'(주문서)에 합산
         if (!isSkip && !isLate) {
           const rest = item.rest;
           const menu = item.menu || "메뉴 미선택";
