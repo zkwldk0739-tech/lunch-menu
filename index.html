@@ -107,7 +107,7 @@
     <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
   </div>
 
-  <!-- 👥 팀원 실시간 현황 (룰렛 위로 이동) -->
+  <!-- 👥 팀원 실시간 현황 -->
   <div class="card">
     <div class="card-title">👀 팀원 실시간 현황</div>
     <ul class="status-list" id="statusList">
@@ -115,7 +115,7 @@
     </ul>
   </div>
 
-  <!-- 🎰 룰렛 패널 (현황 아래로 이동) -->
+  <!-- 🎰 룰렛 패널 -->
   <div class="card roulette-container">
     <div class="card-title" style="justify-content:center; font-size:0.95rem; margin-bottom:2px;">🎰 선택 장애 방지! 룰렛 돌리기</div>
     <div class="roulette-wrapper">
@@ -221,31 +221,42 @@
       
       const restName = restaurants[i].name;
 
-      // 폰트 크기 및 렌더링 위치 정밀 조율 (글씨 짤림 차단)
-      let fontSize = 13;
-      let textRadius = 80;
-
-      if (restName.length >= 7) {
-        fontSize = 10;
-        textRadius = 72; // 글자 수가 긴 경우 중심 쪽으로 당겨 분할선 이탈 방지
-      } else if (restName.length >= 5) {
-        fontSize = 11;
-        textRadius = 76;
-      }
-
-      ctx.font = `bold ${fontSize}px sans-serif`;
-
-      // 텍스트 검은색 외곽선 추가 (가독성 증대)
       ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
       ctx.lineWidth = 3;
       ctx.fillStyle = "#ffffff";
 
-      ctx.translate(160 + Math.cos(angle + arc / 2) * textRadius, 160 + Math.sin(angle + arc / 2) * textRadius);
-      ctx.rotate(angle + arc / 2 + Math.PI / 2);
+      // 긴 이름(진대광부대찌개 등)은 2줄로 분할 처리
+      if (restName.length >= 6) {
+        ctx.font = "bold 11px sans-serif";
+        
+        // 글자를 앞뒤 두 줄로 분지 (예: 진대광 / 부대찌개)
+        const mid = Math.ceil(restName.length / 2);
+        const line1 = restName.slice(0, mid);
+        const line2 = restName.slice(mid);
 
-      const textWidth = ctx.measureText(restName).width;
-      ctx.strokeText(restName, -textWidth / 2, 0);
-      ctx.fillText(restName, -textWidth / 2, 0);
+        ctx.translate(160 + Math.cos(angle + arc / 2) * 85, 160 + Math.sin(angle + arc / 2) * 85);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+
+        // 첫 번째 줄
+        const w1 = ctx.measureText(line1).width;
+        ctx.strokeText(line1, -w1 / 2, -6);
+        ctx.fillText(line1, -w1 / 2, -6);
+
+        // 두 번째 줄
+        const w2 = ctx.measureText(line2).width;
+        ctx.strokeText(line2, -w2 / 2, 8);
+        ctx.fillText(line2, -w2 / 2, 8);
+
+      } else {
+        // 짧은 이름은 기존처럼 단일 행 배치
+        ctx.font = "bold 12px sans-serif";
+        ctx.translate(160 + Math.cos(angle + arc / 2) * 80, 160 + Math.sin(angle + arc / 2) * 80);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+
+        const w = ctx.measureText(restName).width;
+        ctx.strokeText(restName, -w / 2, 0);
+        ctx.fillText(restName, -w / 2, 0);
+      }
       
       ctx.restore();
     }
