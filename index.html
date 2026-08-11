@@ -61,8 +61,8 @@
     button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); margin-top: 8px; }
 
     /* 🎲 식당 랜덤 뽑기 박스 */
-    .random-box { text-align: center; padding: 16px; background: #f9fafb; border-radius: 16px; margin-bottom: 20px; border: 1px solid #f3f4f6; }
-    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; width: 100%; }
+    .random-box { text-align: center; padding: 12px 0 0 0; margin-top: 8px; }
+    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; width: 100%; }
     .spin-btn:active { transform: scale(0.97); }
 
     /* 🗑️ 전체 삭제 버튼 스타일 */
@@ -122,11 +122,13 @@
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
+    <!-- 출발 알리기 버튼 -->
+    <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
+
+    <!-- 🎲 출발 버튼 밑으로 이동한 식당 랜덤 뽑기 박스 -->
     <div class="random-box">
       <button class="spin-btn" id="spinBtn" onclick="spinRandomRest()">🎲 식당 랜덤 뽑기!</button>
     </div>
-
-    <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
   </div>
 
   <div class="card">
@@ -381,7 +383,6 @@
     });
   }
 
-  // ⚡ 비밀번호 입력 없이 클릭 한 번으로 바로 취소/삭제
   function deleteStatus(docId) {
     if (confirm(`${docId}님의 등록을 취소하시겠습니까?`)) {
       db.collection("lunch").doc(docId).delete().then(() => {
@@ -390,7 +391,6 @@
     }
   }
 
-  // 🗑️ 오늘 현황 전체 삭제 (비밀번호: 0410)
   function clearAllStatus() {
     const adminPwd = prompt("전체 삭제를 위한 관리자 비밀번호를 입력해주세요:");
     if (adminPwd === "0410") {
