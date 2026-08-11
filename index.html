@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘의 점심 위치 공유</title>
+
+  <!-- 🎉 폭죽 효과 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f5f5f7; display: flex; justify-content: center; padding: 20px; }
+    .container { width: 100%; max-width: 480px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h1 { font-size: 1.5rem; color: #1d1d1f; margin-bottom: 20px; text-align: center; }
+
+    .card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+    .card-title { font-size: 0.9rem; color: #6c757d; margin-bottom: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    
+    input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
+    input:focus { border-color: #007aff; }
+
+    .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .name-btn { flex: 1; min-width: 90px; background: #ffffff; border: 1.5px solid #007aff; color: #007aff; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .name-btn.active { background: #007aff; color: white; }
+
+    .restaurant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .rest-select-btn { background: #ffffff; border: 1px solid #007aff; color: #007aff; padding: 10px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center; }
+    .rest-select-btn.active { background: #007aff; color: #ffffff; }
+    
+    .rest-select-btn.no-lunch { border-color: #8e8e93; color: #8e8e93; }
+    .rest-select-btn.no-lunch.active { background: #8e8e93; color: #ffffff; }
+
+    /* 🎰 랜덤 룰렛 버튼 */
+    .random-btn { background: #ff9500; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+
+    .menu-section { display: none; background: #eef5ff; border-radius: 10px; padding: 14px; margin-bottom: 12px; border: 1px solid #cce0ff; }
+    .menu-list-view { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; max-height: 220px; overflow-y: auto; }
+    .menu-tag { background: #ffffff; border: 1px solid #b8d5ff; color: #0056b3; padding: 6px 12px; border-radius: 16px; font-size: 0.82rem; }
+
+    button.primary-btn { width: 100%; padding: 14px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 8px; }
+
+    .status-list { list-style: none; }
+    .status-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #eee; border-radius: 8px; }
+    .status-item:last-child { border-bottom: none; }
+    
+    .status-item.skip-lunch { background-color: #f2f2f7; border-left: 4px solid #8e8e93; opacity: 0.8; }
+    .status-item.skip-lunch .restaurant-name { color: #8e8e93; font-weight: bold; }
+
+    .user-name-box { display: flex; align-items: center; gap: 6px; }
+    .user-name { font-weight: bold; font-size: 1.05rem; color: #212529; }
+    .delete-btn { background: #ff3b30; color: white; border: none; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; }
+    .restaurant-name { color: #007aff; font-weight: 600; font-size: 1.05rem; margin-top: 2px; }
+    
+    .map-btn { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #007aff; background: #e7f0ff; padding: 6px 10px; border-radius: 6px; font-weight: 600; text-decoration: none; }
+
+    .time-stamp { font-size: 0.8rem; color: #adb5bd; text-align: right; }
+    .empty-msg { text-align: center; color: #adb5bd; padding: 20px 0; font-size: 0.95rem; }
+
+    /* 🎯 룰렛 모달 팝업 스타일 */
+    .roulette-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+    .roulette-content { background: white; border-radius: 20px; padding: 24px; text-align: center; width: 90%; max-width: 360px; position: relative; }
+    .roulette-wrapper { position: relative; width: 260px; height: 260px; margin: 20px auto; }
+    .roulette-arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 24px solid #ff3b30; z-index: 10; }
+    canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
+    .spin-btn { background: #ff9500; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 25px; cursor: pointer; margin-top: 10px; }
+    .close-modal-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #aaa; }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h1>🍱 오늘 점심 어디 가?</h1>
+
+  <div class="card">
+    <div class="card-title">👤 내 이름 터치</div>
+    <div class="name-grid" id="nameGrid"></div>
+    <input type="hidden" id="userName">
+
+    <div class="card-title">
+      1️⃣ 식당 선택
+      <button class="random-btn" onclick="openRoulette()">🎰 룰렛 돌리기</button>
+    </div>
+    <div class="restaurant-grid">
+      <button class="rest-select-btn" onclick="selectRest('제주국수', 'https://map.naver.com/p/entry/place/17924427', menusJeju, this)">🍜 제주국수</button>
+      <button class="rest-select-btn" onclick="selectRest('보끔당', 'https://map.naver.com/p/entry/place/1445717867', menusBokkeum, this)">🍗 보끔당</button>
+      <button class="rest-select-btn" onclick="selectRest('맛보래', 'https://map.naver.com/p/entry/place/33021725', menusMatborae, this)">🍲 맛보래</button>
+      <button class="rest-select-btn" onclick="selectRest('진대광부대찌개', 'https://map.naver.com/p/entry/place/2082064418', menusJin, this)">🥘 진대광부대찌개</button>
+      <button class="rest-select-btn" onclick="selectRest('위풍당', 'https://map.naver.com/p/entry/place/36999376', menusWipung, this)">🍖 위풍당</button>
+      <button class="rest-select-btn" onclick="selectRest('풍조미역', 'https://map.naver.com/p/entry/place/1907146760', menusMiyeok, this)">🥣 풍조미역</button>
+      <button class="rest-select-btn" onclick="selectRest('바오젠', 'https://map.naver.com/p/entry/place/1610620090', menusBao, this)">🥟 바오젠</button>
+      <button class="rest-select-btn" onclick="selectRest('이층집', 'https://map.naver.com/p/entry/place/1045831832', menusEcheong, this)">🥩 이층집</button>
+      <button class="rest-select-btn" onclick="selectRest('담미온', 'https://map.naver.com/p/entry/place/37997607', menusDammion, this)">🥣 담미온</button>
+      <button class="rest-select-btn no-lunch" onclick="selectRest('🚫 점심 안함', '', [], this)">🚫 점심 안함</button>
+    </div>
+
+    <!-- 식당 대표 메뉴 보기 영역 (참고용) -->
+    <div class="menu-section" id="menuSection">
+      <div class="card-title" style="margin-bottom:4px; color:#0056b3;">📋 주요 메뉴 참고</div>
+      <div class="menu-list-view" id="menuGrid"></div>
+    </div>
+
+    <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👀 팀원 실시간 현황 (오늘)</div>
+    <ul class="status-list" id="statusList">
+      <li class="empty-msg">불러오는 중...</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 🎯 룰렛 모달 창 -->
+<div class="roulette-modal" id="rouletteModal">
+  <div class="roulette-content">
+    <button class="close-modal-btn" onclick="closeRoulette()">✖</button>
+    <h3 style="margin-bottom: 8px;">🎰 오늘의 점심 룰렛</h3>
+    <p style="font-size:0.85rem; color:#666;">운명에 맡겨보세요!</p>
+    
+    <div class="roulette-wrapper">
+      <div class="roulette-arrow"></div>
+      <canvas id="rouletteCanvas" width="300" height="300"></canvas>
+    </div>
+
+    <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">돌리기! 🎲</button>
+  </div>
+</div>
+
+<script>
+  const teamMembers = ['김현수', '김진석', '서인태'];
+
+  const restaurants = [
+    { name: '제주국수', url: 'https://map.naver.com/p/entry/place/17924427', menus: ['멸치 고기국수', '닭곰탕', '순두부', '고기국수', '고기국수 (양 많이)'] },
+    { name: '보끔당', url: 'https://map.naver.com/p/entry/place/1445717867', menus: ['1인 뚝배기 닭볶음탕', '1인 묵은지 뚝배기 닭볶음탕'] },
+    { name: '맛보래', url: 'https://map.naver.com/p/entry/place/33021725', menus: ['김치 두루치기', '참치 김치찌개', '고기 김치찌개', '오징어 볶음', '고추장 불고기'] },
+    { name: '진대광부대찌개', url: 'https://map.naver.com/p/entry/place/2082064418', menus: ['부대찌개 2인', '부대찌개 3인', '부대찌개 4인'] },
+    { name: '위풍당', url: 'https://map.naver.com/p/entry/place/36999376', menus: ['돼지 불족발', '차슈 덮밥', '불맛 차슈 덮밥', '직화 불고기 덮밥', '데리야끼 치킨 덮밥', '불맛 데리야끼 치킨 덮밥'] },
+    { name: '풍조미역', url: 'https://map.naver.com/p/entry/place/1907146760', menus: ['굴 미역국', '조개 미역국', '소고기 미역국', '전복 미역국', '고등어구이'] },
+    { name: '바오젠', url: 'https://map.naver.com/p/entry/place/1610620090', menus: ['완탕면', '매운 완탕면', '게살 챠오판', '마늘 버터 챠오판', '세트 A (완탕면 + 멘보샤)', '세트 B (매운 완탕면 + 멘보샤)', '세트 C (완탕면 + 딤섬 2pcs)', '세트 D (매운 완탕면 + 딤섬 2pcs)', '세트 E (게살 챠오판 + 미니 완탕)'] },
+    { name: '이층집', url: 'https://map.naver.com/p/entry/place/1045831832', menus: ['시골 된장', '우렁 된장', '소고기 국밥', '물냉면', '비빔냉면'] },
+    { name: '담미온', url: 'https://map.naver.com/p/entry/place/37997607', menus: ['순두부', '순대국밥', '부대 특', '얼큰 순대만', '뼈해장국', '보쌈정식'] }
+  ];
+
+  const menusJeju = restaurants[0].menus;
+  const menusBokkeum = restaurants[1].menus;
+  const menusMatborae = restaurants[2].menus;
+  const menusJin = restaurants[3].menus;
+  const menusWipung = restaurants[4].menus;
+  const menusMiyeok = restaurants[5].menus;
+  const menusBao = restaurants[6].menus;
+  const menusEcheong = restaurants[7].menus;
+  const menusDammion = restaurants[8].menus;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCoErZyqOAfFFWFb9s3bBNEqF7N85HT-Oo",
+    authDomain: "parkingcim.firebaseapp.com",
+    projectId: "parkingcim",
+    storageBucket: "parkingcim.firebasestorage.app",
+    messagingSenderId: "969011689771",
+    appId: "1:969011689771:web:8d5cde4c6f81185944ad6e",
+    measurementId: "G-ZSZD9LLL9P"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  window.onload = function() {
+    const nameGrid = document.getElementById("nameGrid");
+    const nameInput = document.getElementById("userName");
+    const savedName = localStorage.getItem("lunchUserName");
+
+    teamMembers.forEach(member => {
+      const btn = document.createElement("button");
+      btn.className = "name-btn";
+      btn.innerText = member;
+      
+      if (savedName === member) {
+        btn.classList.add("active");
+        nameInput.value = member;
+      }
+
+      btn.onclick = function() {
+        document.querySelectorAll(".name-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        nameInput.value = member;
+        localStorage.setItem("lunchUserName", member);
+      };
+      nameGrid.appendChild(btn);
+    });
+
+    if (!savedName && teamMembers.length > 0) {
+      document.querySelectorAll(".name-btn")[0].classList.add("active");
+      nameInput.value = teamMembers[0];
+      localStorage.setItem("lunchUserName", teamMembers[0]);
+    }
+
+    drawRoulette();
+  };
+
+  // 🎯 룰렛 그리기 & 회전 제어
+  const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85929E', '#F1948A'];
+  let currentRotation = 0;
+
+  function drawRoulette() {
+    const canvas = document.getElementById('rouletteCanvas');
+    const ctx = canvas.getContext('2d');
+    const num = restaurants.length;
+    const arc = Math.PI * 2 / num;
+
+    ctx.clearRect(0, 0, 300, 300);
+
+    for (let i = 0; i < num; i++) {
+      const angle = i * arc;
+      ctx.beginPath();
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.moveTo(150, 150);
+      ctx.arc(150, 150, 140, angle, angle + arc);
+      ctx.fill();
+
+      // 텍스트 그리기
+      ctx.save();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 13px sans-serif";
+      ctx.translate(150 + Math.cos(angle + arc / 2) * 90, 150 + Math.sin(angle + arc / 2) * 90);
+      ctx.rotate(angle + arc / 2 + Math.PI / 2);
+      ctx.fillText(restaurants[i].name, -ctx.measureText(restaurants[i].name).width / 2, 0);
+      ctx.restore();
+    }
+  }
+
+  function openRoulette() {
+    document.getElementById('rouletteModal').style.display = 'flex';
+  }
+
+  function closeRoulette() {
+    document.getElementById('rouletteModal').style.display = 'none';
+  }
+
+  function spinRoulette() {
+    const spinBtn = document.getElementById('spinBtn');
+    spinBtn.disabled = true;
+
+    const canvas = document.getElementById('rouletteCanvas');
+    const num = restaurants.length;
+    const selectedIndex = Math.floor(Math.random() * num);
+    const arc = 360 / num;
+
+    // 회전 계산 (최소 5바퀴 + 해당 칸의 중앙에 멈추도록 회전각 계산)
+    const targetAngle = 360 * 5 + (270 - (selectedIndex * arc + arc / 2));
+    currentRotation += targetAngle;
+
+    canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+    setTimeout(() => {
+      const winRest = restaurants[selectedIndex];
+      
+      // 해당 버튼 자동 클릭
+      const buttons = document.querySelectorAll('.rest-select-btn');
+      buttons.forEach(b => {
+        if (b.innerText.includes(winRest.name)) {
+          b.click();
+        }
+      });
+
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
+      
+      setTimeout(() => {
+        closeRoulette();
+        spinBtn.disabled = false;
+      }, 800);
+    }, 4000);
+  }
+
+  let selectedRestName = "";
+  let selectedRestUrl = "";
+
+  function selectRest(name, url, menus, btnElement) {
+    document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    selectedRestName = name;
+    selectedRestUrl = url;
+
+    const menuSection = document.getElementById('menuSection');
+    const menuGrid = document.getElementById('menuGrid');
+
+    if (name === '🚫 점심 안함') {
+      menuSection.style.display = 'none';
+      return;
+    }
+
+    if (menus.length > 0) {
+      menuSection.style.display = 'block';
+      menuGrid.innerHTML = '';
+
+      menus.forEach(menu => {
+        const span = document.createElement('span');
+        span.className = 'menu-tag';
+        span.innerText = menu;
+        menuGrid.appendChild(span);
+      });
+    } else {
+      menuSection.style.display = 'none';
+    }
+  }
+
+  const getToday = () => new Date().toISOString().slice(0, 10);
+
+  function addStatus() {
+    const name = document.getElementById("userName").value;
+    let restName = selectedRestName;
+    let restUrl = selectedRestUrl;
+
+    if (!name) { alert("이름을 선택해주세요!"); return; }
+    if (!restName) { alert("식당 또는 '점심 안함'을 선택해주세요!"); return; }
+
+    const now = new Date();
+    const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
+                       now.getMinutes().toString().padStart(2, '0');
+
+    db.collection("lunch").doc(name).set({
+      name: name,
+      rest: restName,
+      url: restUrl,
+      time: timeString,
+      date: getToday(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+      document.getElementById('menuSection').style.display = 'none';
+      document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
+      selectedRestName = "";
+    });
+  }
+
+  function deleteStatus(docId) {
+    if (confirm(`${docId}님의 등록을 삭제하시겠습니까?`)) {
+      db.collection("lunch").doc(docId).delete().then(() => {
+        alert("삭제되었습니다.");
+      });
+    }
+  }
+
+  db.collection("lunch")
+    .where("date", "==", getToday())
+    .onSnapshot((snapshot) => {
+      const listEl = document.getElementById("statusList");
+      
+      if (snapshot.empty) {
+        listEl.innerHTML = `<li class="empty-msg">아직 출발한 사람이 없습니다.</li>`;
+        return;
+      }
+
+      let html = "";
+      snapshot.forEach((doc) => {
+        const item = doc.data();
+        const isSkip = item.rest === '🚫 점심 안함';
+        
+        html += `
+          <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
+            <div>
+              <div class="user-name-box">
+                <span class="user-name">${item.name}</span>
+                <button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>
+              </div>
+              <div class="restaurant-name">${isSkip ? '🚫 점심 안함' : '📍 ' + item.rest}</div>
+              ${item.url ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="map-btn">🗺️ 지도에서 위치 보기</a>` : ''}
+            </div>
+            <div class="time-stamp">${item.time} ${isSkip ? '확인' : '출발'}</div>
+          </li>
+        `;
+      });
+      listEl.innerHTML = html;
+    });
+</script>
+
+</body>
+</html>
