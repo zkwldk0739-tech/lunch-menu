@@ -143,7 +143,7 @@
     </div>
   </div>
 
-  <!-- 📋 오늘 주문 모아보기 요약 카드 (12:05 이전 정당 제출 건만 자동 합산) -->
+  <!-- 📋 오늘 주문 모아보기 요약 카드 (12:05 이전/일찍 제출한 건만 자동 합산) -->
   <div class="summary-card" id="summaryCard" style="display: none;">
     <div class="summary-title">📋 오늘 주문 모아보기</div>
     <div id="summaryContent"></div>
@@ -229,7 +229,7 @@
 
     if (now < start) {
       timerBox.className = "timer-box";
-      timerBox.innerText = `⌛ 12:00부터 5분 타이머가 시작됩니다`;
+      timerBox.innerText = `⌛ 12:00부터 5분 타이머가 시작됩니다 (사전 선택 가능)`;
     } else if (now >= start && now <= end) {
       const diffSec = Math.floor((end - now) / 1000);
       const m = Math.floor(diffSec / 60);
@@ -478,13 +478,14 @@
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // 🚨 12:00 ~ 12:05 범위를 벗어나면 지각 제출로 처리
-    const isLate = (hours !== 12) || (hours === 12 && minutes >= 5);
+    // 💡 변경점: 12시 05분 '이후'(12:05 ~ 23:59)인 경우만 지각 처리!
+    // 12시 이전(예: 11시 30분 미리 클릭) 및 12:00 ~ 12:05 사이 제출은 모두 정상 인정
+    const isLate = (hours === 12 && minutes >= 5) || hours > 12;
 
     const timeString = hours.toString().padStart(2, '0') + ":" + 
                        minutes.toString().padStart(2, '0');
 
-    // 12:05 이후일 경우 경고 팝업 안내
+    // 12:05 이후일 경우에만 경고 팝업 안내
     if (isLate) {
       alert("🚨 마감 시간(12:05)이 지났습니다!\n메뉴가 [오늘 주문 모아보기] 주문서에 들어가지 않으니, 점심 담당자에게 직접 말씀해주세요!");
     }
@@ -577,7 +578,7 @@
           </li>
         `;
 
-        // 12:05 이전 정당 제출 건만 '주문 모아보기'(주문서)에 합산
+        // 12:05 이전/사전 정상 제출 건만 '주문 모아보기'(주문서)에 합산
         if (!isSkip && !isLate) {
           const rest = item.rest;
           const menu = item.menu || "메뉴 미선택";
