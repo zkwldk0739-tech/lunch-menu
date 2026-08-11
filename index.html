@@ -13,11 +13,9 @@
     body { background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
     .container { width: 100%; max-width: 480px; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
     
-    /* 🎯 메인 타이틀 & 타이머 */
     h1 { font-size: 1.6rem; color: #111827; margin-bottom: 4px; text-align: center; font-weight: 800; }
     .sub-title { font-size: 0.85rem; color: #6b7280; text-align: center; font-weight: 600; margin-bottom: 8px; }
     
-    /* ⏱️ 12:00 ~ 12:05 타이머 박스 */
     .timer-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 10px; text-align: center; font-weight: 800; color: #dc2626; font-size: 0.95rem; margin-bottom: 20px; }
     .timer-box.active { background: #fee2e2; border-color: #ef4444; animation: pulse 1.5s infinite; }
 
@@ -29,58 +27,50 @@
 
     .card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
     .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-    
-    input { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
-    input:focus { border-color: #6366f1; }
 
-    /* 👤 이름 선택 버튼 */
+    /* 👤 이름 선택 버튼 & 고정 스타일 */
     .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
     .name-btn { flex: 1; min-width: 90px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
     .name-btn.active { background: #6366f1; border-color: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+    .name-btn:disabled { background: #f3f4f6; border-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; opacity: 0.5; }
+    
+    .reset-name-btn { font-size: 0.75rem; color: #ef4444; text-decoration: underline; cursor: pointer; background: none; border: none; font-weight: 600; }
 
     /* 🏪 식당 그리드 */
     .restaurant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
     .rest-select-btn.active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
     
-    /* 🔴 점심 패스 글씨 색상 및 강조 스타일 적용 */
-    .rest-select-btn.no-lunch { 
-      background: #fef2f2; 
-      border-color: #fca5a5; 
-      color: #dc2626; 
-      font-weight: 800; 
-    }
-    .rest-select-btn.no-lunch.active { 
-      background: #ef4444; 
-      border-color: #ef4444; 
-      color: #ffffff; 
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35); 
+    /* 🎲 룰렛 대체: 랜덤 바운스 애니메이션 스타일 */
+    .rest-select-btn.highlight {
+      background: #ff9f43 !important;
+      color: #ffffff !important;
+      border-color: #ff9f43 !important;
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255, 159, 67, 0.4);
     }
 
-    /* 📋 클릭형 메뉴 선택 박스 */
+    .rest-select-btn.no-lunch { background: #fef2f2; border-color: #fca5a5; color: #dc2626; font-weight: 800; }
+    .rest-select-btn.no-lunch.active { background: #ef4444; border-color: #ef4444; color: #ffffff; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35); }
+
     .menu-section { display: none; background: #f5f3ff; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #ede9fe; }
     .menu-list-view { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; max-height: 220px; overflow-y: auto; }
-    
     .menu-tag-btn { background: #ffffff; border: 1.5px solid #ddd6fe; color: #6d28d9; padding: 8px 12px; border-radius: 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .menu-tag-btn.active { background: #7c3aed; color: #ffffff; border-color: #7c3aed; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3); }
 
-    /* 🍽️ 대형 룰렛 디자인 */
-    .roulette-container { text-align: center; padding: 16px 0; background: #f9fafb; border-radius: 16px; margin-bottom: 16px; border: 1px solid #f3f4f6; }
-    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
-    
-    /* 🔻 화살표 */
-    .roulette-arrow { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 16px solid #ef4444; z-index: 10; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2)); }
-    
-    canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 6px 20px rgba(0,0,0,0.1); transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
-    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 10px 24px; font-size: 0.95rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; margin-top: 6px; }
-    .spin-btn:active { transform: scale(0.95); }
-
     button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); margin-top: 8px; }
+
+    /* 🎲 식당 랜덤 뽑기 박스 */
+    .random-box { text-align: center; padding: 16px; background: #f9fafb; border-radius: 16px; margin-bottom: 20px; border: 1px solid #f3f4f6; }
+    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; width: 100%; }
+    .spin-btn:active { transform: scale(0.97); }
+
+    /* 🗑️ 전체 삭제 버튼 스타일 */
+    .clear-all-btn { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; border-radius: 6px; cursor: pointer; }
 
     .status-list { list-style: none; }
     .status-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #f3f4f6; border-radius: 10px; margin-bottom: 4px; background: #fafafa; }
     .status-item:last-child { border-bottom: none; }
-    
     .status-item.skip-lunch { background-color: #fef2f2; border-left: 4px solid #ef4444; opacity: 0.85; }
     .status-item.skip-lunch .restaurant-name { color: #dc2626; font-weight: bold; }
 
@@ -89,9 +79,7 @@
     .delete-btn { background: #ef4444; color: white; border: none; padding: 3px 7px; font-size: 0.7rem; border-radius: 6px; cursor: pointer; }
     .restaurant-name { color: #4f46e5; font-weight: 700; font-size: 1.05rem; margin-top: 2px; }
     .selected-menu-text { font-size: 0.85rem; color: #6b7280; font-weight: 600; margin-top: 2px; }
-    
     .map-btn { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #4f46e5; background: #eeefff; padding: 6px 10px; border-radius: 6px; font-weight: 600; text-decoration: none; }
-
     .time-stamp { font-size: 0.8rem; color: #9ca3af; text-align: right; }
     .empty-msg { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 0.95rem; }
   </style>
@@ -105,16 +93,18 @@
   <h1>🍱 오늘의 점심 메뉴</h1>
   <div class="sub-title">5분 내 메뉴 미선택 시 랜덤 주문</div>
   
-  <!-- ⏱️ 12:00 ~ 12:05 타이머 -->
   <div class="timer-box" id="timerDisplay">⏱️ 타이머 로딩 중...</div>
 
   <div class="card">
-    <div class="card-title">👤 내 이름 선택</div>
+    <div class="card-title">
+      👤 내 이름 선택 (기기 고정)
+      <button class="reset-name-btn" onclick="resetMyName()">🔒 이름 변경하기</button>
+    </div>
     <div class="name-grid" id="nameGrid"></div>
     <input type="hidden" id="userName">
 
     <div class="card-title">📍 식당 선택</div>
-    <div class="restaurant-grid">
+    <div class="restaurant-grid" id="restGrid">
       <button class="rest-select-btn" onclick="selectRest('제주국수', 'https://map.naver.com/p/entry/place/17924427', menusJeju, this)">🍜 제주국수</button>
       <button class="rest-select-btn" onclick="selectRest('보끔당', 'https://map.naver.com/p/entry/place/1445717867', menusBokkeum, this)">🍗 보끔당</button>
       <button class="rest-select-btn" onclick="selectRest('맛보래', 'https://map.naver.com/p/entry/place/33021725', menusMatborae, this)">🍲 맛보래</button>
@@ -124,36 +114,30 @@
       <button class="rest-select-btn" onclick="selectRest('바오젠', 'https://map.naver.com/p/entry/place/1610620090', menusBao, this)">🥟 바오젠</button>
       <button class="rest-select-btn" onclick="selectRest('이층집', 'https://map.naver.com/p/entry/place/1045831832', menusEcheong, this)">🥩 이층집</button>
       <button class="rest-select-btn" onclick="selectRest('담미온', 'https://map.naver.com/p/entry/place/37997607', menusDammion, this)">🥣 담미온</button>
-      
-      <!-- 🔴 빨간색 강조 적용된 점심 패스 버튼 -->
       <button class="rest-select-btn no-lunch" onclick="selectRest('🙅‍♂️ 점심 패스', '', [], this)">🙅‍♂️ 점심 패스</button>
     </div>
 
-    <!-- 📋 선택 가능한 메뉴 영역 -->
     <div class="menu-section" id="menuSection">
       <div class="card-title" style="margin-bottom:4px; color:#5b21b6;">🍽️ 메뉴 선택 (클릭)</div>
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
+    <!-- 🎲 버튼 전광판 방식 식당 뽑기 -->
+    <div class="random-box">
+      <button class="spin-btn" id="spinBtn" onclick="spinRandomRest()">🎲 식당 랜덤 뽑기!</button>
+    </div>
+
     <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
   </div>
 
-  <!-- 👥 팀원 실시간 현황 -->
   <div class="card">
-    <div class="card-title">👀 팀원 실시간 현황</div>
+    <div class="card-title">
+      👀 팀원 실시간 현황
+      <button class="clear-all-btn" onclick="clearAllStatus()">🗑️ 전체 삭제</button>
+    </div>
     <ul class="status-list" id="statusList">
       <li class="empty-msg">불러오는 중...</li>
     </ul>
-  </div>
-
-  <!-- 🎰 룰렛 패널 -->
-  <div class="card roulette-container">
-    <div class="card-title" style="justify-content:center; font-size:0.95rem; margin-bottom:2px;">🎰 선택 장애 방지! 룰렛 돌리기</div>
-    <div class="roulette-wrapper">
-      <div class="roulette-arrow"></div>
-      <canvas id="rouletteCanvas" width="320" height="320"></canvas>
-    </div>
-    <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">돌리기! 🎲</button>
   </div>
 
 </div>
@@ -196,7 +180,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // ⏱️ 12:00 ~ 12:05 5분 타이머 로직
   function updateTimer() {
     const now = new Date();
     const timerBox = document.getElementById("timerDisplay");
@@ -222,142 +205,105 @@
     }
   }
 
-  window.onload = function() {
+  // 🔒 기기 고정 및 최초 비밀번호 설정 로직
+  function renderNameGrid() {
     const nameGrid = document.getElementById("nameGrid");
     const nameInput = document.getElementById("userName");
-    const savedName = localStorage.getItem("lunchUserName");
+    const savedName = localStorage.getItem("lunchUserNameFixed");
+
+    nameGrid.innerHTML = "";
 
     teamMembers.forEach(member => {
       const btn = document.createElement("button");
       btn.className = "name-btn";
       btn.innerText = member;
-      
-      if (savedName === member) {
-        btn.classList.add("active");
-        nameInput.value = member;
+
+      if (savedName) {
+        if (savedName === member) {
+          btn.classList.add("active");
+          nameInput.value = member;
+        } else {
+          btn.disabled = true;
+        }
       }
 
       btn.onclick = function() {
-        document.querySelectorAll(".name-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        nameInput.value = member;
-        localStorage.setItem("lunchUserName", member);
+        if (!localStorage.getItem("lunchUserNameFixed")) {
+          const pwd = prompt(`'${member}'님으로 이 기기에 고정합니다.\n변경 시 사용할 비밀번호 4자리를 설정해주세요:`);
+          if (pwd && pwd.length >= 4) {
+            localStorage.setItem("lunchUserNameFixed", member);
+            localStorage.setItem("lunchUserPin", pwd);
+            alert(`${member}님으로 등록되었습니다.`);
+            renderNameGrid();
+          } else {
+            alert("비밀번호 4자리 이상을 입력해야 등록됩니다.");
+          }
+        }
       };
       nameGrid.appendChild(btn);
     });
+  }
 
-    if (!savedName && teamMembers.length > 0) {
-      document.querySelectorAll(".name-btn")[0].classList.add("active");
-      nameInput.value = teamMembers[0];
-      localStorage.setItem("lunchUserName", teamMembers[0]);
+  // 🔒 비밀번호 입력 후 이름 변경 기능
+  function resetMyName() {
+    const savedName = localStorage.getItem("lunchUserNameFixed");
+    const savedPin = localStorage.getItem("lunchUserPin");
+
+    if (!savedName) {
+      alert("고정된 이름이 없습니다.");
+      return;
     }
 
-    drawRoulette();
+    const inputPwd = prompt(`'${savedName}'님의 설정된 비밀번호 4자리를 입력해주세요:`);
+    if (inputPwd === savedPin) {
+      localStorage.removeItem("lunchUserNameFixed");
+      localStorage.removeItem("lunchUserPin");
+      document.getElementById("userName").value = "";
+      alert("이름 고정이 해제되었습니다. 새로운 이름을 선택해주세요.");
+      renderNameGrid();
+    } else {
+      alert("❌ 비밀번호가 일치하지 않습니다!");
+    }
+  }
+
+  window.onload = function() {
+    renderNameGrid();
     updateTimer();
     setInterval(updateTimer, 1000);
   };
 
-  const colors = ['#FF7675', '#74B9FF', '#55E6C1', '#FFEAA7', '#A29BFE', '#FD79A8', '#FAB1A0', '#81ECEC', '#E84393'];
-  let currentRotation = 0;
-
-  function drawRoulette() {
-    const canvas = document.getElementById('rouletteCanvas');
-    const ctx = canvas.getContext('2d');
-    const num = restaurants.length;
-    const arc = Math.PI * 2 / num;
-
-    ctx.clearRect(0, 0, 320, 320);
-
-    for (let i = 0; i < num; i++) {
-      const angle = i * arc;
-      ctx.beginPath();
-      ctx.fillStyle = colors[i % colors.length];
-      ctx.moveTo(160, 160);
-      ctx.arc(160, 160, 150, angle, angle + arc);
-      ctx.fill();
-
-      ctx.save();
-      
-      const restName = restaurants[i].name;
-
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-      ctx.lineWidth = 3;
-      ctx.fillStyle = "#ffffff";
-
-      if (restName === '진대광부대찌개') {
-        ctx.font = "bold 11px sans-serif";
-        const line1 = '진대광';
-        const line2 = '부대찌개';
-
-        ctx.translate(160 + Math.cos(angle + arc / 2) * 85, 160 + Math.sin(angle + arc / 2) * 85);
-        ctx.rotate(angle + arc / 2 + Math.PI / 2);
-
-        const w1 = ctx.measureText(line1).width;
-        ctx.strokeText(line1, -w1 / 2, -6);
-        ctx.fillText(line1, -w1 / 2, -6);
-
-        const w2 = ctx.measureText(line2).width;
-        ctx.strokeText(line2, -w2 / 2, 8);
-        ctx.fillText(line2, -w2 / 2, 8);
-
-      } else if (restName.length >= 6) {
-        ctx.font = "bold 11px sans-serif";
-        const mid = Math.floor(restName.length / 2);
-        const line1 = restName.slice(0, mid);
-        const line2 = restName.slice(mid);
-
-        ctx.translate(160 + Math.cos(angle + arc / 2) * 85, 160 + Math.sin(angle + arc / 2) * 85);
-        ctx.rotate(angle + arc / 2 + Math.PI / 2);
-
-        const w1 = ctx.measureText(line1).width;
-        ctx.strokeText(line1, -w1 / 2, -6);
-        ctx.fillText(line1, -w1 / 2, -6);
-
-        const w2 = ctx.measureText(line2).width;
-        ctx.strokeText(line2, -w2 / 2, 8);
-        ctx.fillText(line2, -w2 / 2, 8);
-
-      } else {
-        ctx.font = "bold 12px sans-serif";
-        ctx.translate(160 + Math.cos(angle + arc / 2) * 80, 160 + Math.sin(angle + arc / 2) * 80);
-        ctx.rotate(angle + arc / 2 + Math.PI / 2);
-
-        const w = ctx.measureText(restName).width;
-        ctx.strokeText(restName, -w / 2, 0);
-        ctx.fillText(restName, -w / 2, 0);
-      }
-      
-      ctx.restore();
-    }
-  }
-
-  function spinRoulette() {
+  // 🎲 1초 짧아진 속도의 전광판 랜더링 애니메이션
+  function spinRandomRest() {
     const spinBtn = document.getElementById('spinBtn');
+    const buttons = Array.from(document.querySelectorAll('.rest-select-btn')).filter(b => !b.classList.contains('no-lunch'));
+    
+    if (buttons.length === 0) return;
+
     spinBtn.disabled = true;
+    let count = 0;
+    const maxCount = 16; // 기존 25회에서 16회로 감소 (약 1초 단축)
+    let speed = 60; // 속도(ms)
 
-    const canvas = document.getElementById('rouletteCanvas');
-    const num = restaurants.length;
-    const selectedIndex = Math.floor(Math.random() * num);
-    const arc = 360 / num;
+    function highlightNext() {
+      buttons.forEach(b => b.classList.remove('highlight'));
+      const randomIndex = Math.floor(Math.random() * buttons.length);
+      buttons[randomIndex].classList.add('highlight');
 
-    const targetAngle = 360 * 5 + (270 - (selectedIndex * arc + arc / 2));
-    currentRotation += targetAngle;
+      count++;
+      if (count < maxCount) {
+        speed += 14;
+        setTimeout(highlightNext, speed);
+      } else {
+        setTimeout(() => {
+          buttons[randomIndex].classList.remove('highlight');
+          buttons[randomIndex].click();
+          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+          spinBtn.disabled = false;
+        }, 200);
+      }
+    }
 
-    canvas.style.transform = `rotate(${currentRotation}deg)`;
-
-    setTimeout(() => {
-      const winRest = restaurants[selectedIndex];
-      
-      const buttons = document.querySelectorAll('.rest-select-btn');
-      buttons.forEach(b => {
-        if (b.innerText.includes(winRest.name)) {
-          b.click();
-        }
-      });
-
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-      spinBtn.disabled = false;
-    }, 4000);
+    highlightNext();
   }
 
   let selectedRestName = "";
@@ -410,7 +356,7 @@
     let restUrl = selectedRestUrl;
     let menuName = selectedMenuName;
 
-    if (!name) { alert("이름을 선택해주세요!"); return; }
+    if (!name) { alert("먼저 내 이름을 고정(선택)해주세요!"); return; }
     if (!restName) { alert("식당 또는 '점심 패스'를 선택해주세요!"); return; }
 
     if (!restName.includes('점심 패스') && !menuName) {
@@ -440,10 +386,36 @@
   }
 
   function deleteStatus(docId) {
+    const myName = localStorage.getItem("lunchUserNameFixed");
+    if (docId !== myName) {
+      alert("❌ 타인의 제출 내역은 삭제할 수 없습니다!");
+      return;
+    }
+
     if (confirm(`${docId}님의 등록을 삭제하시겠습니까?`)) {
       db.collection("lunch").doc(docId).delete().then(() => {
         alert("삭제되었습니다.");
       });
+    }
+  }
+
+  // 🗑️ 오늘 현황 전체 삭제 기능 (비밀번호: 0410)
+  function clearAllStatus() {
+    const adminPwd = prompt("전체 삭제를 위한 관리자 비밀번호를 입력해주세요:");
+    if (adminPwd === "0410") {
+      if (confirm("오늘 등록된 모든 출발 알림 내역을 정말 삭제하시겠습니까?")) {
+        db.collection("lunch").where("date", "==", getToday()).get().then((snapshot) => {
+          const batch = db.batch();
+          snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          return batch.commit();
+        }).then(() => {
+          alert("오늘의 모든 제출 현황이 삭제되었습니다.");
+        });
+      }
+    } else if (adminPwd !== null) {
+      alert("❌ 관리자 비밀번호가 일치하지 않습니다!");
     }
   }
 
@@ -461,13 +433,15 @@
       snapshot.forEach((doc) => {
         const item = doc.data();
         const isSkip = item.rest.includes('점심 패스');
+        const myName = localStorage.getItem("lunchUserNameFixed");
+        const isMine = item.name === myName;
         
         html += `
           <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
             <div>
               <div class="user-name-box">
                 <span class="user-name">${item.name}</span>
-                <button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>
+                ${isMine ? `<button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>` : ''}
               </div>
               <div class="restaurant-name">${isSkip ? '🙅‍♂️ 점심 패스' : '📍 ' + item.rest}</div>
               ${!isSkip && item.menu ? `<div class="selected-menu-text">🍱 선택 메뉴: ${item.menu}</div>` : ''}
