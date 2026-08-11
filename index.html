@@ -13,9 +13,19 @@
     body { background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
     .container { width: 100%; max-width: 480px; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
     
-    /* 🎯 메인 타이틀 */
+    /* 🎯 메인 타이틀 & 타이머 */
     h1 { font-size: 1.6rem; color: #111827; margin-bottom: 4px; text-align: center; font-weight: 800; }
-    .sub-title { font-size: 0.85rem; color: #ef4444; text-align: center; font-weight: 600; margin-bottom: 20px; }
+    .sub-title { font-size: 0.85rem; color: #6b7280; text-align: center; font-weight: 600; margin-bottom: 8px; }
+    
+    /* ⏱️ 12:00 ~ 12:05 타이머 박스 */
+    .timer-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 10px; text-align: center; font-weight: 800; color: #dc2626; font-size: 0.95rem; margin-bottom: 20px; }
+    .timer-box.active { background: #fee2e2; border-color: #ef4444; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
 
     .card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
     .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
@@ -33,8 +43,19 @@
     .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
     .rest-select-btn.active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
     
-    .rest-select-btn.no-lunch { border-color: #d1d5db; color: #9ca3af; }
-    .rest-select-btn.no-lunch.active { background: #6b7280; color: #ffffff; }
+    /* 🔴 점심 패스 글씨 색상 및 강조 스타일 적용 */
+    .rest-select-btn.no-lunch { 
+      background: #fef2f2; 
+      border-color: #fca5a5; 
+      color: #dc2626; 
+      font-weight: 800; 
+    }
+    .rest-select-btn.no-lunch.active { 
+      background: #ef4444; 
+      border-color: #ef4444; 
+      color: #ffffff; 
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35); 
+    }
 
     /* 📋 클릭형 메뉴 선택 박스 */
     .menu-section { display: none; background: #f5f3ff; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #ede9fe; }
@@ -60,8 +81,8 @@
     .status-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #f3f4f6; border-radius: 10px; margin-bottom: 4px; background: #fafafa; }
     .status-item:last-child { border-bottom: none; }
     
-    .status-item.skip-lunch { background-color: #f3f4f6; border-left: 4px solid #9ca3af; opacity: 0.75; }
-    .status-item.skip-lunch .restaurant-name { color: #6b7280; font-weight: bold; }
+    .status-item.skip-lunch { background-color: #fef2f2; border-left: 4px solid #ef4444; opacity: 0.85; }
+    .status-item.skip-lunch .restaurant-name { color: #dc2626; font-weight: bold; }
 
     .user-name-box { display: flex; align-items: center; gap: 6px; }
     .user-name { font-weight: bold; font-size: 1rem; color: #1f2937; }
@@ -82,7 +103,10 @@
 
 <div class="container">
   <h1>🍱 오늘의 점심 메뉴</h1>
-  <div class="sub-title">(메뉴 미선택시 랜덤주문)</div>
+  <div class="sub-title">5분 내 메뉴 미선택 시 랜덤 주문</div>
+  
+  <!-- ⏱️ 12:00 ~ 12:05 타이머 -->
+  <div class="timer-box" id="timerDisplay">⏱️ 타이머 로딩 중...</div>
 
   <div class="card">
     <div class="card-title">👤 내 이름 선택</div>
@@ -100,7 +124,9 @@
       <button class="rest-select-btn" onclick="selectRest('바오젠', 'https://map.naver.com/p/entry/place/1610620090', menusBao, this)">🥟 바오젠</button>
       <button class="rest-select-btn" onclick="selectRest('이층집', 'https://map.naver.com/p/entry/place/1045831832', menusEcheong, this)">🥩 이층집</button>
       <button class="rest-select-btn" onclick="selectRest('담미온', 'https://map.naver.com/p/entry/place/37997607', menusDammion, this)">🥣 담미온</button>
-      <button class="rest-select-btn no-lunch" onclick="selectRest('🚫 점심 안함', '', [], this)">🚫 점심 안함</button>
+      
+      <!-- 🔴 빨간색 강조 적용된 점심 패스 버튼 -->
+      <button class="rest-select-btn no-lunch" onclick="selectRest('🙅‍♂️ 점심 패스', '', [], this)">🙅‍♂️ 점심 패스</button>
     </div>
 
     <!-- 📋 선택 가능한 메뉴 영역 -->
@@ -170,6 +196,32 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // ⏱️ 12:00 ~ 12:05 5분 타이머 로직
+  function updateTimer() {
+    const now = new Date();
+    const timerBox = document.getElementById("timerDisplay");
+
+    const start = new Date(now);
+    start.setHours(12, 0, 0, 0);
+
+    const end = new Date(now);
+    end.setHours(12, 5, 0, 0);
+
+    if (now < start) {
+      timerBox.className = "timer-box";
+      timerBox.innerHTML = `⌛ 12:00부터 5분 타이머가 시작됩니다`;
+    } else if (now >= start && now <= end) {
+      const diffSec = Math.floor((end - now) / 1000);
+      const m = Math.floor(diffSec / 60);
+      const s = diffSec % 60;
+      timerBox.className = "timer-box active";
+      timerBox.innerHTML = `🚨 랜덤 주문 마감까지: 0${m}:${s < 10 ? '0' : ''}${s} 🚨`;
+    } else {
+      timerBox.className = "timer-box";
+      timerBox.innerHTML = `⚠️ 12:05 마감 완료 (미선택 시 자동 랜덤 주문)`;
+    }
+  }
+
   window.onload = function() {
     const nameGrid = document.getElementById("nameGrid");
     const nameInput = document.getElementById("userName");
@@ -201,6 +253,8 @@
     }
 
     drawRoulette();
+    updateTimer();
+    setInterval(updateTimer, 1000);
   };
 
   const colors = ['#FF7675', '#74B9FF', '#55E6C1', '#FFEAA7', '#A29BFE', '#FD79A8', '#FAB1A0', '#81ECEC', '#E84393'];
@@ -308,7 +362,7 @@
 
   let selectedRestName = "";
   let selectedRestUrl = "";
-  let selectedMenuName = ""; // 선택된 개별 메뉴 저장 변수
+  let selectedMenuName = "";
 
   function selectRest(name, url, menus, btnElement) {
     document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
@@ -316,12 +370,12 @@
 
     selectedRestName = name;
     selectedRestUrl = url;
-    selectedMenuName = ""; // 식당 변경 시 선택 메뉴 초기화
+    selectedMenuName = "";
 
     const menuSection = document.getElementById('menuSection');
     const menuGrid = document.getElementById('menuGrid');
 
-    if (name === '🚫 점심 안함') {
+    if (name.includes('점심 패스')) {
       menuSection.style.display = 'none';
       return;
     }
@@ -338,7 +392,7 @@
         btn.onclick = function() {
           document.querySelectorAll('.menu-tag-btn').forEach(mb => mb.classList.remove('active'));
           btn.classList.add('active');
-          selectedMenuName = menu; // 선택한 메뉴 기록
+          selectedMenuName = menu;
         };
 
         menuGrid.appendChild(btn);
@@ -357,10 +411,9 @@
     let menuName = selectedMenuName;
 
     if (!name) { alert("이름을 선택해주세요!"); return; }
-    if (!restName) { alert("식당 또는 '점심 안함'을 선택해주세요!"); return; }
+    if (!restName) { alert("식당 또는 '점심 패스'를 선택해주세요!"); return; }
 
-    // 메뉴 미선택 시 '랜덤주문' 처리
-    if (restName !== '🚫 점심 안함' && !menuName) {
+    if (!restName.includes('점심 패스') && !menuName) {
       menuName = "🎲 랜덤주문";
     }
 
@@ -407,7 +460,7 @@
       let html = "";
       snapshot.forEach((doc) => {
         const item = doc.data();
-        const isSkip = item.rest === '🚫 점심 안함';
+        const isSkip = item.rest.includes('점심 패스');
         
         html += `
           <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
@@ -416,7 +469,7 @@
                 <span class="user-name">${item.name}</span>
                 <button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>
               </div>
-              <div class="restaurant-name">${isSkip ? '🚫 점심 안함' : '📍 ' + item.rest}</div>
+              <div class="restaurant-name">${isSkip ? '🙅‍♂️ 점심 패스' : '📍 ' + item.rest}</div>
               ${!isSkip && item.menu ? `<div class="selected-menu-text">🍱 선택 메뉴: ${item.menu}</div>` : ''}
               ${item.url ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="map-btn">🗺️ 지도에서 위치 보기</a>` : ''}
             </div>
