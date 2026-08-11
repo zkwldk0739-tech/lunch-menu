@@ -225,30 +225,43 @@
       ctx.lineWidth = 3;
       ctx.fillStyle = "#ffffff";
 
-      // 긴 이름(진대광부대찌개 등)은 2줄로 분할 처리
-      if (restName.length >= 6) {
+      // '진대광부대찌개' 수동 줄바꿈 지정 ('진대광' / '부대찌개')
+      if (restName === '진대광부대찌개') {
         ctx.font = "bold 11px sans-serif";
-        
-        // 글자를 앞뒤 두 줄로 분지 (예: 진대광 / 부대찌개)
-        const mid = Math.ceil(restName.length / 2);
+        const line1 = '진대광';
+        const line2 = '부대찌개';
+
+        ctx.translate(160 + Math.cos(angle + arc / 2) * 85, 160 + Math.sin(angle + arc / 2) * 85);
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+
+        const w1 = ctx.measureText(line1).width;
+        ctx.strokeText(line1, -w1 / 2, -6);
+        ctx.fillText(line1, -w1 / 2, -6);
+
+        const w2 = ctx.measureText(line2).width;
+        ctx.strokeText(line2, -w2 / 2, 8);
+        ctx.fillText(line2, -w2 / 2, 8);
+
+      } else if (restName.length >= 6) {
+        // 기타 6자 이상 식당
+        ctx.font = "bold 11px sans-serif";
+        const mid = Math.floor(restName.length / 2);
         const line1 = restName.slice(0, mid);
         const line2 = restName.slice(mid);
 
         ctx.translate(160 + Math.cos(angle + arc / 2) * 85, 160 + Math.sin(angle + arc / 2) * 85);
         ctx.rotate(angle + arc / 2 + Math.PI / 2);
 
-        // 첫 번째 줄
         const w1 = ctx.measureText(line1).width;
         ctx.strokeText(line1, -w1 / 2, -6);
         ctx.fillText(line1, -w1 / 2, -6);
 
-        // 두 번째 줄
         const w2 = ctx.measureText(line2).width;
         ctx.strokeText(line2, -w2 / 2, 8);
         ctx.fillText(line2, -w2 / 2, 8);
 
       } else {
-        // 짧은 이름은 기존처럼 단일 행 배치
+        // 짧은 이름 식당
         ctx.font = "bold 12px sans-serif";
         ctx.translate(160 + Math.cos(angle + arc / 2) * 80, 160 + Math.sin(angle + arc / 2) * 80);
         ctx.rotate(angle + arc / 2 + Math.PI / 2);
