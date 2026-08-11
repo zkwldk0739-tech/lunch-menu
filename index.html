@@ -139,7 +139,13 @@
 </div>
 
 <script>
-  let teamMembers = JSON.parse(localStorage.getItem("lunchTeamMembers")) || ['김현수', '김진석', '서인태'];
+  const defaultPins = {
+    '김현수': '0410',
+    '김진석': '8291',
+    '서인태': '4703'
+  };
+
+  let teamMembers = JSON.parse(localStorage.getItem("lunchTeamMembers")) || Object.keys(defaultPins);
 
   const restaurants = [
     { name: '제주국수', url: 'https://map.naver.com/p/entry/place/17924427', menus: ['멸치 고기국수', '닭곰탕', '순두부', '고기국수', '고기국수 (양 많이)'] },
@@ -176,6 +182,17 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  function initDefaultUserPins() {
+    Object.keys(defaultPins).forEach(name => {
+      const userRef = db.collection("users").doc(name);
+      userRef.get().then(doc => {
+        if (!doc.exists) {
+          userRef.set({ pin: defaultPins[name] });
+        }
+      });
+    });
+  }
+
   function updateTimer() {
     const now = new Date();
     const timerBox = document.getElementById("timerDisplay");
@@ -201,9 +218,6 @@
     }
   }
 
-  // 🔑 DB 기반 이름 검증 및 비밀번호 확인
-  let currentSelectedPin = "";
-
   function renderNameGrid() {
     const nameGrid = document.getElementById("nameGrid");
     const nameInput = document.getElementById("userName");
@@ -220,32 +234,19 @@
       }
 
       btn.onclick = function() {
-        // 이름 클릭 시 DB 검증
         db.collection("users").doc(member).get().then((doc) => {
-          if (!doc.exists) {
-            // 1. 최초 설정
-            const newPin = prompt(`'${member}'님의 비밀번호 4자리를 신규 설정해주세요:`);
-            if (!newPin || newPin.trim() === "") return; // 취소 누르면 그냥 종료
+          let targetPin = defaultPins[member] || "0000";
+          if (doc.exists && doc.data().pin) {
+            targetPin = doc.data().pin;
+          }
 
-            if (newPin.length < 4) {
-              alert("비밀번호는 4자리 이상이어야 합니다.");
-              return;
-            }
+          const inputPin = prompt(`'${member}'님의 비밀번호 4자리를 입력해주세요:`);
+          if (!inputPin || inputPin.trim() === "") return;
 
-            db.collection("users").doc(member).set({ pin: newPin }).then(() => {
-              alert("비밀번호 설정 완료!");
-              setActiveName(member, newPin);
-            });
+          if (inputPin === targetPin) {
+            setActiveName(member, inputPin);
           } else {
-            // 2. 기존 사용자 비밀번호 확인
-            const inputPin = prompt(`'${member}'님의 비밀번호 4자리를 입력해주세요:`);
-            if (!inputPin || inputPin.trim() === "") return; // 취소 누르면 재구속 없이 깔끔하게 창 닫힘
-
-            if (doc.data().pin === inputPin) {
-              setActiveName(member, inputPin);
-            } else {
-              alert("❌ 비밀번호가 일치하지 않습니다!");
-            }
+            alert("❌ 비밀번호가 일치하지 않습니다!");
           }
         });
       };
@@ -256,34 +257,74 @@
 
   function setActiveName(name, pin) {
     document.getElementById("userName").value = name;
-    currentSelectedPin = pin;
     renderNameGrid();
   }
 
-  // ⚙️ 관리자 권한 기반 팀원 이름 삭제/추가 관리 (비밀번호: 0410)
+  // ⚙️ 관리자 메뉴 (목록 번호 선택 방식의 비밀번호 초기화 추가)
   function manageNames() {
     const adminPwd = prompt("팀원 관리 권한을 위한 관리자 비밀번호를 입력하세요:");
     if (adminPwd === "0410") {
-      const action = prompt("1: 팀원 추가, 2: 팀원 삭제 (숫자 선택)");
+      const action = prompt("1: 팀원 추가\n2: 팀원 삭제\n3: 비밀번호 초기화\n(원하는 작업의 번호를 입력하세요)");
+      
       if (action === "1") {
         const newMember = prompt("추가할 팀원 이름을 입력하세요:");
         if (newMember && !teamMembers.includes(newMember)) {
-          teamMembers.push(newMember);
-          localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
-          renderNameGrid();
-          alert(`${newMember}님이 추가되었습니다.`);
+          const newPin = prompt(`${newMember}님에게 부여할 비밀번호 4자리를 입력하세요:`);
+          if (newPin && newPin.length >= 4) {
+            teamMembers.push(newMember);
+            localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
+            db.collection("users").doc(newMember).set({ pin: newPin });
+            renderNameGrid();
+            alert(`${newMember}님이 추가되었습니다.`);
+          } else {
+            alert("비밀번호 4자리 이상을 설정해야 추가됩니다.");
+          }
         }
       } else if (action === "2") {
-        const delMember = prompt(`삭제할 팀원 이름을 입력하세요:\n현재 목록: ${teamMembers.join(', ')}`);
-        if (delMember && teamMembers.includes(delMember)) {
-          teamMembers = teamMembers.filter(m => m !== delMember);
-          localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
-          db.collection("users").doc(delMember).delete(); // DB 비밀번호 데이터도 삭제
-          if (document.getElementById("userName").value === delMember) {
-            document.getElementById("userName").value = "";
+        let menuList = "삭제할 팀원의 번호를 선택하세요:\n";
+        teamMembers.forEach((m, idx) => {
+          menuList += `${idx + 1}: ${m}\n`;
+        });
+        const selectedIdx = prompt(menuList);
+        if (selectedIdx) {
+          const num = parseInt(selectedIdx) - 1;
+          if (num >= 0 && num < teamMembers.length) {
+            const delMember = teamMembers[num];
+            teamMembers.splice(num, 1);
+            localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
+            db.collection("users").doc(delMember).delete();
+            if (document.getElementById("userName").value === delMember) {
+              document.getElementById("userName").value = "";
+            }
+            renderNameGrid();
+            alert(`${delMember}님이 목록에서 삭제되었습니다.`);
+          } else {
+            alert("❌ 올바른 번호를 입력해주세요.");
           }
-          renderNameGrid();
-          alert(`${delMember}님이 목록에서 삭제되었습니다.`);
+        }
+      } else if (action === "3") {
+        // 🔑 목록 번호 선택 기반 비밀번호 초기화
+        let menuList = "비밀번호를 초기화할 팀원의 번호를 선택하세요:\n";
+        teamMembers.forEach((m, idx) => {
+          menuList += `${idx + 1}: ${m}\n`;
+        });
+        
+        const selectedIdx = prompt(menuList);
+        if (selectedIdx) {
+          const num = parseInt(selectedIdx) - 1;
+          if (num >= 0 && num < teamMembers.length) {
+            const targetMember = teamMembers[num];
+            const newPin = prompt(`'${targetMember}'님의 새 비밀번호 4자리를 입력하세요:`);
+            if (newPin && newPin.length >= 4) {
+              db.collection("users").doc(targetMember).set({ pin: newPin }).then(() => {
+                alert(`'${targetMember}'님의 비밀번호가 변경되었습니다.`);
+              });
+            } else {
+              alert("비밀번호는 4자리 이상이어야 합니다.");
+            }
+          } else {
+            alert("❌ 올바른 번호를 입력해주세요.");
+          }
         }
       }
     } else if (adminPwd !== null) {
@@ -292,6 +333,7 @@
   }
 
   window.onload = function() {
+    initDefaultUserPins();
     renderNameGrid();
     updateTimer();
     setInterval(updateTimer, 1000);
@@ -380,7 +422,7 @@
     let restUrl = selectedRestUrl;
     let menuName = selectedMenuName;
 
-    if (!name) { alert("먼저 내 이름을 고정(선택)해주세요!"); return; }
+    if (!name) { alert("먼저 내 이름을 선택하고 비밀번호를 입력해주세요!"); return; }
     if (!restName) { alert("식당 또는 '점심 패스'를 선택해주세요!"); return; }
 
     if (!restName.includes('점심 패스') && !menuName) {
