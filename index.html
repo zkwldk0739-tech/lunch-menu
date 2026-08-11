@@ -3,68 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>오늘의 점심 위치 공유</title>
+  <title>오늘의 점심 메뉴</title>
 
   <!-- 🎉 폭죽 효과 라이브러리 -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f5f5f7; display: flex; justify-content: center; padding: 20px; }
-    .container { width: 100%; max-width: 480px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    h1 { font-size: 1.5rem; color: #1d1d1f; margin-bottom: 20px; text-align: center; }
-
-    .card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-    .card-title { font-size: 0.9rem; color: #6c757d; margin-bottom: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    body { background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+    .container { width: 100%; max-width: 480px; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
     
-    input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
-    input:focus { border-color: #007aff; }
+    /* 🎯 메인 타이틀 */
+    h1 { font-size: 1.6rem; color: #111827; margin-bottom: 20px; text-align: center; font-weight: 800; }
 
-    .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-    .name-btn { flex: 1; min-width: 90px; background: #ffffff; border: 1.5px solid #007aff; color: #007aff; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
-    .name-btn.active { background: #007aff; color: white; }
+    .card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+    
+    input { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
+    input:focus { border-color: #6366f1; }
 
+    /* 👤 이름 선택 버튼 */
+    .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .name-btn { flex: 1; min-width: 90px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .name-btn.active { background: #6366f1; border-color: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+
+    /* 🍽️ 대형 룰렛 디자인 */
+    .roulette-container { text-align: center; padding: 10px 0 20px 0; background: #f9fafb; border-radius: 16px; margin-bottom: 16px; border: 1px solid #f3f4f6; }
+    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
+    .roulette-arrow { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 26px solid #ef4444; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.12); transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
+    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.4); transition: transform 0.1s; }
+    .spin-btn:active { transform: scale(0.95); }
+
+    /* 🏪 식당 그리드 */
     .restaurant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .rest-select-btn { background: #ffffff; border: 1px solid #007aff; color: #007aff; padding: 10px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center; }
-    .rest-select-btn.active { background: #007aff; color: #ffffff; }
+    .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .rest-select-btn.active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
     
-    .rest-select-btn.no-lunch { border-color: #8e8e93; color: #8e8e93; }
-    .rest-select-btn.no-lunch.active { background: #8e8e93; color: #ffffff; }
+    .rest-select-btn.no-lunch { border-color: #d1d5db; color: #9ca3af; }
+    .rest-select-btn.no-lunch.active { background: #6b7280; color: #ffffff; }
 
-    /* 🎰 랜덤 룰렛 버튼 */
-    .random-btn { background: #ff9500; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
-
-    .menu-section { display: none; background: #eef5ff; border-radius: 10px; padding: 14px; margin-bottom: 12px; border: 1px solid #cce0ff; }
+    /* 📋 메뉴 설명 박스 */
+    .menu-section { display: none; background: #f5f3ff; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #ede9fe; }
     .menu-list-view { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; max-height: 220px; overflow-y: auto; }
-    .menu-tag { background: #ffffff; border: 1px solid #b8d5ff; color: #0056b3; padding: 6px 12px; border-radius: 16px; font-size: 0.82rem; }
+    .menu-tag { background: #ffffff; border: 1px solid #ddd6fe; color: #6d28d9; padding: 6px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 500; }
 
-    button.primary-btn { width: 100%; padding: 14px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 8px; }
+    button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); }
 
     .status-list { list-style: none; }
-    .status-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #eee; border-radius: 8px; }
+    .status-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #f3f4f6; border-radius: 10px; margin-bottom: 4px; background: #fafafa; }
     .status-item:last-child { border-bottom: none; }
     
-    .status-item.skip-lunch { background-color: #f2f2f7; border-left: 4px solid #8e8e93; opacity: 0.8; }
-    .status-item.skip-lunch .restaurant-name { color: #8e8e93; font-weight: bold; }
+    .status-item.skip-lunch { background-color: #f3f4f6; border-left: 4px solid #9ca3af; opacity: 0.75; }
+    .status-item.skip-lunch .restaurant-name { color: #6b7280; font-weight: bold; }
 
     .user-name-box { display: flex; align-items: center; gap: 6px; }
-    .user-name { font-weight: bold; font-size: 1.05rem; color: #212529; }
-    .delete-btn { background: #ff3b30; color: white; border: none; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; }
-    .restaurant-name { color: #007aff; font-weight: 600; font-size: 1.05rem; margin-top: 2px; }
+    .user-name { font-weight: bold; font-size: 1rem; color: #1f2937; }
+    .delete-btn { background: #ef4444; color: white; border: none; padding: 3px 7px; font-size: 0.7rem; border-radius: 6px; cursor: pointer; }
+    .restaurant-name { color: #4f46e5; font-weight: 700; font-size: 1.05rem; margin-top: 2px; }
     
-    .map-btn { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #007aff; background: #e7f0ff; padding: 6px 10px; border-radius: 6px; font-weight: 600; text-decoration: none; }
+    .map-btn { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #4f46e5; background: #eeefff; padding: 6px 10px; border-radius: 6px; font-weight: 600; text-decoration: none; }
 
-    .time-stamp { font-size: 0.8rem; color: #adb5bd; text-align: right; }
-    .empty-msg { text-align: center; color: #adb5bd; padding: 20px 0; font-size: 0.95rem; }
-
-    /* 🎯 룰렛 모달 팝업 스타일 */
-    .roulette-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
-    .roulette-content { background: white; border-radius: 20px; padding: 24px; text-align: center; width: 90%; max-width: 360px; position: relative; }
-    .roulette-wrapper { position: relative; width: 260px; height: 260px; margin: 20px auto; }
-    .roulette-arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 24px solid #ff3b30; z-index: 10; }
-    canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
-    .spin-btn { background: #ff9500; color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 25px; cursor: pointer; margin-top: 10px; }
-    .close-modal-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #aaa; }
+    .time-stamp { font-size: 0.8rem; color: #9ca3af; text-align: right; }
+    .empty-msg { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 0.95rem; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -73,17 +74,24 @@
 <body>
 
 <div class="container">
-  <h1>🍱 오늘 점심 어디 가?</h1>
+  <h1>🍱 오늘의 점심 메뉴</h1>
 
   <div class="card">
-    <div class="card-title">👤 내 이름 터치</div>
+    <div class="card-title">👤 내 이름 선택</div>
     <div class="name-grid" id="nameGrid"></div>
     <input type="hidden" id="userName">
 
-    <div class="card-title">
-      1️⃣ 식당 선택
-      <button class="random-btn" onclick="openRoulette()">🎰 룰렛 돌리기</button>
+    <!-- 🎰 대형 화면 룰렛 패널 -->
+    <div class="roulette-container">
+      <div class="card-title" style="justify-content:center; font-size:1rem; margin-bottom:4px;">🎰 메뉴 고민될 땐? 대형 룰렛!</div>
+      <div class="roulette-wrapper">
+        <div class="roulette-arrow"></div>
+        <canvas id="rouletteCanvas" width="320" height="320"></canvas>
+      </div>
+      <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">룰렛 돌리기! 🎲</button>
     </div>
+
+    <div class="card-title">📍 식당 선택</div>
     <div class="restaurant-grid">
       <button class="rest-select-btn" onclick="selectRest('제주국수', 'https://map.naver.com/p/entry/place/17924427', menusJeju, this)">🍜 제주국수</button>
       <button class="rest-select-btn" onclick="selectRest('보끔당', 'https://map.naver.com/p/entry/place/1445717867', menusBokkeum, this)">🍗 보끔당</button>
@@ -97,9 +105,9 @@
       <button class="rest-select-btn no-lunch" onclick="selectRest('🚫 점심 안함', '', [], this)">🚫 점심 안함</button>
     </div>
 
-    <!-- 식당 대표 메뉴 보기 영역 (참고용) -->
+    <!-- 메뉴 미리보기 영역 -->
     <div class="menu-section" id="menuSection">
-      <div class="card-title" style="margin-bottom:4px; color:#0056b3;">📋 주요 메뉴 참고</div>
+      <div class="card-title" style="margin-bottom:4px; color:#5b21b6;">📋 대표 메뉴</div>
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
@@ -107,26 +115,10 @@
   </div>
 
   <div class="card">
-    <div class="card-title">👀 팀원 실시간 현황 (오늘)</div>
+    <div class="card-title">👀 팀원 실시간 현황</div>
     <ul class="status-list" id="statusList">
       <li class="empty-msg">불러오는 중...</li>
     </ul>
-  </div>
-</div>
-
-<!-- 🎯 룰렛 모달 창 -->
-<div class="roulette-modal" id="rouletteModal">
-  <div class="roulette-content">
-    <button class="close-modal-btn" onclick="closeRoulette()">✖</button>
-    <h3 style="margin-bottom: 8px;">🎰 오늘의 점심 룰렛</h3>
-    <p style="font-size:0.85rem; color:#666;">운명에 맡겨보세요!</p>
-    
-    <div class="roulette-wrapper">
-      <div class="roulette-arrow"></div>
-      <canvas id="rouletteCanvas" width="300" height="300"></canvas>
-    </div>
-
-    <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">돌리기! 🎲</button>
   </div>
 </div>
 
@@ -201,8 +193,8 @@
     drawRoulette();
   };
 
-  // 🎯 룰렛 그리기 & 회전 제어
-  const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85929E', '#F1948A'];
+  // 🎨 감성 파스텔 톤 고급 컬러 팔레트
+  const colors = ['#FF7675', '#74B9FF', '#55E6C1', '#FFEAA7', '#A29BFE', '#FD79A8', '#FAB1A0', '#81ECEC', '#E84393'];
   let currentRotation = 0;
 
   function drawRoulette() {
@@ -211,33 +203,26 @@
     const num = restaurants.length;
     const arc = Math.PI * 2 / num;
 
-    ctx.clearRect(0, 0, 300, 300);
+    ctx.clearRect(0, 0, 320, 320);
 
     for (let i = 0; i < num; i++) {
       const angle = i * arc;
       ctx.beginPath();
       ctx.fillStyle = colors[i % colors.length];
-      ctx.moveTo(150, 150);
-      ctx.arc(150, 150, 140, angle, angle + arc);
+      ctx.moveTo(160, 160);
+      ctx.arc(160, 160, 150, angle, angle + arc);
       ctx.fill();
 
-      // 텍스트 그리기
       ctx.save();
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 13px sans-serif";
-      ctx.translate(150 + Math.cos(angle + arc / 2) * 90, 150 + Math.sin(angle + arc / 2) * 90);
+      ctx.font = "bold 14px sans-serif";
+      ctx.shadowColor = "rgba(0,0,0,0.3)";
+      ctx.shadowBlur = 3;
+      ctx.translate(160 + Math.cos(angle + arc / 2) * 100, 160 + Math.sin(angle + arc / 2) * 100);
       ctx.rotate(angle + arc / 2 + Math.PI / 2);
       ctx.fillText(restaurants[i].name, -ctx.measureText(restaurants[i].name).width / 2, 0);
       ctx.restore();
     }
-  }
-
-  function openRoulette() {
-    document.getElementById('rouletteModal').style.display = 'flex';
-  }
-
-  function closeRoulette() {
-    document.getElementById('rouletteModal').style.display = 'none';
   }
 
   function spinRoulette() {
@@ -249,7 +234,6 @@
     const selectedIndex = Math.floor(Math.random() * num);
     const arc = 360 / num;
 
-    // 회전 계산 (최소 5바퀴 + 해당 칸의 중앙에 멈추도록 회전각 계산)
     const targetAngle = 360 * 5 + (270 - (selectedIndex * arc + arc / 2));
     currentRotation += targetAngle;
 
@@ -258,7 +242,6 @@
     setTimeout(() => {
       const winRest = restaurants[selectedIndex];
       
-      // 해당 버튼 자동 클릭
       const buttons = document.querySelectorAll('.rest-select-btn');
       buttons.forEach(b => {
         if (b.innerText.includes(winRest.name)) {
@@ -266,12 +249,8 @@
         }
       });
 
-      confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
-      
-      setTimeout(() => {
-        closeRoulette();
-        spinBtn.disabled = false;
-      }, 800);
+      confetti({ particleCount: 90, spread: 70, origin: { y: 0.5 } });
+      spinBtn.disabled = false;
     }, 4000);
   }
 
@@ -330,7 +309,7 @@
       date: getToday(),
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      confetti({ particleCount: 110, spread: 80, origin: { y: 0.6 } });
 
       document.getElementById('menuSection').style.display = 'none';
       document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
