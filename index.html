@@ -27,14 +27,6 @@
     .name-btn { flex: 1; min-width: 90px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
     .name-btn.active { background: #6366f1; border-color: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
 
-    /* 🍽️ 대형 룰렛 디자인 */
-    .roulette-container { text-align: center; padding: 10px 0 20px 0; background: #f9fafb; border-radius: 16px; margin-bottom: 16px; border: 1px solid #f3f4f6; }
-    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
-    .roulette-arrow { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 26px solid #ef4444; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-    canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.12); transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
-    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.4); transition: transform 0.1s; }
-    .spin-btn:active { transform: scale(0.95); }
-
     /* 🏪 식당 그리드 */
     .restaurant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
@@ -44,9 +36,20 @@
     .rest-select-btn.no-lunch.active { background: #6b7280; color: #ffffff; }
 
     /* 📋 메뉴 설명 박스 */
-    .menu-section { display: none; background: #f5f3ff; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #ede9fe; }
+    .menu-section { display: none; background: #f5f3ff; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #ede9fe; }
     .menu-list-view { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; max-height: 220px; overflow-y: auto; }
     .menu-tag { background: #ffffff; border: 1px solid #ddd6fe; color: #6d28d9; padding: 6px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 500; }
+
+    /* 🍽️ 대형 룰렛 디자인 (하단으로 배치) */
+    .roulette-container { text-align: center; padding: 16px 0; background: #f9fafb; border-radius: 16px; margin-bottom: 16px; border: 1px solid #f3f4f6; }
+    .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
+    
+    /* 🔻 작아진 화살표 크기 */
+    .roulette-arrow { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 16px solid #ef4444; z-index: 10; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2)); }
+    
+    canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 6px 20px rgba(0,0,0,0.1); transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
+    .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 10px 24px; font-size: 0.95rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; margin-top: 6px; }
+    .spin-btn:active { transform: scale(0.95); }
 
     button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); }
 
@@ -81,16 +84,6 @@
     <div class="name-grid" id="nameGrid"></div>
     <input type="hidden" id="userName">
 
-    <!-- 🎰 대형 화면 룰렛 패널 -->
-    <div class="roulette-container">
-      <div class="card-title" style="justify-content:center; font-size:1rem; margin-bottom:4px;">🎰 메뉴 고민될 땐? 대형 룰렛!</div>
-      <div class="roulette-wrapper">
-        <div class="roulette-arrow"></div>
-        <canvas id="rouletteCanvas" width="320" height="320"></canvas>
-      </div>
-      <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">룰렛 돌리기! 🎲</button>
-    </div>
-
     <div class="card-title">📍 식당 선택</div>
     <div class="restaurant-grid">
       <button class="rest-select-btn" onclick="selectRest('제주국수', 'https://map.naver.com/p/entry/place/17924427', menusJeju, this)">🍜 제주국수</button>
@@ -109,6 +102,16 @@
     <div class="menu-section" id="menuSection">
       <div class="card-title" style="margin-bottom:4px; color:#5b21b6;">📋 대표 메뉴</div>
       <div class="menu-list-view" id="menuGrid"></div>
+    </div>
+
+    <!-- 🎰 하단 배치된 룰렛 패널 -->
+    <div class="roulette-container">
+      <div class="card-title" style="justify-content:center; font-size:0.95rem; margin-bottom:2px;">🎰 선택 장애 방지! 룰렛 돌리기</div>
+      <div class="roulette-wrapper">
+        <div class="roulette-arrow"></div>
+        <canvas id="rouletteCanvas" width="320" height="320"></canvas>
+      </div>
+      <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">돌리기! 🎲</button>
     </div>
 
     <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
@@ -193,7 +196,6 @@
     drawRoulette();
   };
 
-  // 🎨 감성 파스텔 톤 고급 컬러 팔레트
   const colors = ['#FF7675', '#74B9FF', '#55E6C1', '#FFEAA7', '#A29BFE', '#FD79A8', '#FAB1A0', '#81ECEC', '#E84393'];
   let currentRotation = 0;
 
@@ -215,12 +217,24 @@
 
       ctx.save();
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 14px sans-serif";
-      ctx.shadowColor = "rgba(0,0,0,0.3)";
-      ctx.shadowBlur = 3;
-      ctx.translate(160 + Math.cos(angle + arc / 2) * 100, 160 + Math.sin(angle + arc / 2) * 100);
+      
+      // 글자 수에 따라 폰트 크기 유동적 조절 (진대광부대찌개 이탈 방지)
+      const restName = restaurants[i].name;
+      if (restName.length >= 7) {
+        ctx.font = "bold 11px sans-serif";
+      } else if (restName.length >= 5) {
+        ctx.font = "bold 12px sans-serif";
+      } else {
+        ctx.font = "bold 13px sans-serif";
+      }
+
+      ctx.shadowColor = "rgba(0,0,0,0.25)";
+      ctx.shadowBlur = 2;
+      
+      // 중심에서 88px 위치에 고정하여 테두리 밖으로 넘어가지 않도록 배치
+      ctx.translate(160 + Math.cos(angle + arc / 2) * 88, 160 + Math.sin(angle + arc / 2) * 88);
       ctx.rotate(angle + arc / 2 + Math.PI / 2);
-      ctx.fillText(restaurants[i].name, -ctx.measureText(restaurants[i].name).width / 2, 0);
+      ctx.fillText(restName, -ctx.measureText(restName).width / 2, 0);
       ctx.restore();
     }
   }
@@ -249,7 +263,7 @@
         }
       });
 
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.5 } });
+      confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
       spinBtn.disabled = false;
     }, 4000);
   }
