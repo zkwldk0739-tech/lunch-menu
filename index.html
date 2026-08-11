@@ -14,7 +14,8 @@
     .container { width: 100%; max-width: 480px; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
     
     /* 🎯 메인 타이틀 */
-    h1 { font-size: 1.6rem; color: #111827; margin-bottom: 20px; text-align: center; font-weight: 800; }
+    h1 { font-size: 1.6rem; color: #111827; margin-bottom: 4px; text-align: center; font-weight: 800; }
+    .sub-title { font-size: 0.85rem; color: #ef4444; text-align: center; font-weight: 600; margin-bottom: 20px; }
 
     .card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
     .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
@@ -35,10 +36,12 @@
     .rest-select-btn.no-lunch { border-color: #d1d5db; color: #9ca3af; }
     .rest-select-btn.no-lunch.active { background: #6b7280; color: #ffffff; }
 
-    /* 📋 메뉴 설명 박스 */
+    /* 📋 클릭형 메뉴 선택 박스 */
     .menu-section { display: none; background: #f5f3ff; border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid #ede9fe; }
     .menu-list-view { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; max-height: 220px; overflow-y: auto; }
-    .menu-tag { background: #ffffff; border: 1px solid #ddd6fe; color: #6d28d9; padding: 6px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 500; }
+    
+    .menu-tag-btn { background: #ffffff; border: 1.5px solid #ddd6fe; color: #6d28d9; padding: 8px 12px; border-radius: 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .menu-tag-btn.active { background: #7c3aed; color: #ffffff; border-color: #7c3aed; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3); }
 
     /* 🍽️ 대형 룰렛 디자인 */
     .roulette-container { text-align: center; padding: 16px 0; background: #f9fafb; border-radius: 16px; margin-bottom: 16px; border: 1px solid #f3f4f6; }
@@ -64,6 +67,7 @@
     .user-name { font-weight: bold; font-size: 1rem; color: #1f2937; }
     .delete-btn { background: #ef4444; color: white; border: none; padding: 3px 7px; font-size: 0.7rem; border-radius: 6px; cursor: pointer; }
     .restaurant-name { color: #4f46e5; font-weight: 700; font-size: 1.05rem; margin-top: 2px; }
+    .selected-menu-text { font-size: 0.85rem; color: #6b7280; font-weight: 600; margin-top: 2px; }
     
     .map-btn { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #4f46e5; background: #eeefff; padding: 6px 10px; border-radius: 6px; font-weight: 600; text-decoration: none; }
 
@@ -78,6 +82,7 @@
 
 <div class="container">
   <h1>🍱 오늘의 점심 메뉴</h1>
+  <div class="sub-title">(메뉴 미선택시 랜덤주문)</div>
 
   <div class="card">
     <div class="card-title">👤 내 이름 선택</div>
@@ -98,9 +103,9 @@
       <button class="rest-select-btn no-lunch" onclick="selectRest('🚫 점심 안함', '', [], this)">🚫 점심 안함</button>
     </div>
 
-    <!-- 메뉴 미리보기 영역 -->
+    <!-- 📋 선택 가능한 메뉴 영역 -->
     <div class="menu-section" id="menuSection">
-      <div class="card-title" style="margin-bottom:4px; color:#5b21b6;">📋 대표 메뉴</div>
+      <div class="card-title" style="margin-bottom:4px; color:#5b21b6;">🍽️ 메뉴 선택 (클릭)</div>
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
@@ -225,7 +230,6 @@
       ctx.lineWidth = 3;
       ctx.fillStyle = "#ffffff";
 
-      // '진대광부대찌개' 수동 줄바꿈 지정 ('진대광' / '부대찌개')
       if (restName === '진대광부대찌개') {
         ctx.font = "bold 11px sans-serif";
         const line1 = '진대광';
@@ -243,7 +247,6 @@
         ctx.fillText(line2, -w2 / 2, 8);
 
       } else if (restName.length >= 6) {
-        // 기타 6자 이상 식당
         ctx.font = "bold 11px sans-serif";
         const mid = Math.floor(restName.length / 2);
         const line1 = restName.slice(0, mid);
@@ -261,7 +264,6 @@
         ctx.fillText(line2, -w2 / 2, 8);
 
       } else {
-        // 짧은 이름 식당
         ctx.font = "bold 12px sans-serif";
         ctx.translate(160 + Math.cos(angle + arc / 2) * 80, 160 + Math.sin(angle + arc / 2) * 80);
         ctx.rotate(angle + arc / 2 + Math.PI / 2);
@@ -306,6 +308,7 @@
 
   let selectedRestName = "";
   let selectedRestUrl = "";
+  let selectedMenuName = ""; // 선택된 개별 메뉴 저장 변수
 
   function selectRest(name, url, menus, btnElement) {
     document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
@@ -313,6 +316,7 @@
 
     selectedRestName = name;
     selectedRestUrl = url;
+    selectedMenuName = ""; // 식당 변경 시 선택 메뉴 초기화
 
     const menuSection = document.getElementById('menuSection');
     const menuGrid = document.getElementById('menuGrid');
@@ -327,10 +331,17 @@
       menuGrid.innerHTML = '';
 
       menus.forEach(menu => {
-        const span = document.createElement('span');
-        span.className = 'menu-tag';
-        span.innerText = menu;
-        menuGrid.appendChild(span);
+        const btn = document.createElement('button');
+        btn.className = 'menu-tag-btn';
+        btn.innerText = menu;
+        
+        btn.onclick = function() {
+          document.querySelectorAll('.menu-tag-btn').forEach(mb => mb.classList.remove('active'));
+          btn.classList.add('active');
+          selectedMenuName = menu; // 선택한 메뉴 기록
+        };
+
+        menuGrid.appendChild(btn);
       });
     } else {
       menuSection.style.display = 'none';
@@ -343,9 +354,15 @@
     const name = document.getElementById("userName").value;
     let restName = selectedRestName;
     let restUrl = selectedRestUrl;
+    let menuName = selectedMenuName;
 
     if (!name) { alert("이름을 선택해주세요!"); return; }
     if (!restName) { alert("식당 또는 '점심 안함'을 선택해주세요!"); return; }
+
+    // 메뉴 미선택 시 '랜덤주문' 처리
+    if (restName !== '🚫 점심 안함' && !menuName) {
+      menuName = "🎲 랜덤주문";
+    }
 
     const now = new Date();
     const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
@@ -354,6 +371,7 @@
     db.collection("lunch").doc(name).set({
       name: name,
       rest: restName,
+      menu: menuName || "",
       url: restUrl,
       time: timeString,
       date: getToday(),
@@ -364,6 +382,7 @@
       document.getElementById('menuSection').style.display = 'none';
       document.querySelectorAll('.rest-select-btn').forEach(b => b.classList.remove('active'));
       selectedRestName = "";
+      selectedMenuName = "";
     });
   }
 
@@ -398,6 +417,7 @@
                 <button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>
               </div>
               <div class="restaurant-name">${isSkip ? '🚫 점심 안함' : '📍 ' + item.rest}</div>
+              ${!isSkip && item.menu ? `<div class="selected-menu-text">🍱 선택 메뉴: ${item.menu}</div>` : ''}
               ${item.url ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="map-btn">🗺️ 지도에서 위치 보기</a>` : ''}
             </div>
             <div class="time-stamp">${item.time} ${isSkip ? '확인' : '출발'}</div>
