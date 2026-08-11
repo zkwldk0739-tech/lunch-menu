@@ -29,11 +29,12 @@
     .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
 
     /* 👤 이름 선택 버튼 */
-    .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .name-btn { flex: 1; min-width: 90px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
     .name-btn.active { background: #6366f1; border-color: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
 
     .admin-btn { font-size: 0.75rem; color: #4f46e5; background: #eeefff; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .logout-btn { font-size: 0.75rem; color: #ef4444; background: #fef2f2; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: none; }
 
     /* 🏪 식당 그리드 */
     .restaurant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
@@ -98,6 +99,7 @@
       <button class="admin-btn" onclick="manageNames()">⚙️ 이름 관리</button>
     </div>
     <div class="name-grid" id="nameGrid"></div>
+    <button class="logout-btn" id="logoutBtn" onclick="logoutUser()">🔓 로그인 해제</button>
     <input type="hidden" id="userName">
 
     <div class="card-title">📍 식당 선택</div>
@@ -221,6 +223,16 @@
   function renderNameGrid() {
     const nameGrid = document.getElementById("nameGrid");
     const nameInput = document.getElementById("userName");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // 로컬 스토리지에서 영구 인증된 사용자 확인
+    const savedUser = localStorage.getItem("lunchLoggedInUser");
+    if (savedUser) {
+      nameInput.value = savedUser;
+      logoutBtn.style.display = "inline-block";
+    } else {
+      logoutBtn.style.display = "none";
+    }
 
     nameGrid.innerHTML = "";
 
@@ -234,6 +246,11 @@
       }
 
       btn.onclick = function() {
+        // 이미 본인으로 자동 로그인되어 있는 경우 비번 생략
+        if (localStorage.getItem("lunchLoggedInUser") === member) {
+          return;
+        }
+
         db.collection("users").doc(member).get().then((doc) => {
           let targetPin = defaultPins[member] || "0000";
           if (doc.exists && doc.data().pin) {
@@ -244,7 +261,9 @@
           if (!inputPin || inputPin.trim() === "") return;
 
           if (inputPin === targetPin) {
-            setActiveName(member, inputPin);
+            // 영구 로그인 정보 저장
+            localStorage.setItem("lunchLoggedInUser", member);
+            setActiveName(member);
           } else {
             alert("❌ 비밀번호가 일치하지 않습니다!");
           }
@@ -255,12 +274,19 @@
     });
   }
 
-  function setActiveName(name, pin) {
+  function setActiveName(name) {
     document.getElementById("userName").value = name;
     renderNameGrid();
   }
 
-  // ⚙️ 관리자 메뉴 (목록 번호 선택 방식의 비밀번호 초기화 추가)
+  function logoutUser() {
+    if (confirm("로그인을 해제하시겠습니까?")) {
+      localStorage.removeItem("lunchLoggedInUser");
+      document.getElementById("userName").value = "";
+      renderNameGrid();
+    }
+  }
+
   function manageNames() {
     const adminPwd = prompt("팀원 관리 권한을 위한 관리자 비밀번호를 입력하세요:");
     if (adminPwd === "0410") {
@@ -293,7 +319,8 @@
             teamMembers.splice(num, 1);
             localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
             db.collection("users").doc(delMember).delete();
-            if (document.getElementById("userName").value === delMember) {
+            if (localStorage.getItem("lunchLoggedInUser") === delMember) {
+              localStorage.removeItem("lunchLoggedInUser");
               document.getElementById("userName").value = "";
             }
             renderNameGrid();
@@ -303,7 +330,6 @@
           }
         }
       } else if (action === "3") {
-        // 🔑 목록 번호 선택 기반 비밀번호 초기화
         let menuList = "비밀번호를 초기화할 팀원의 번호를 선택하세요:\n";
         teamMembers.forEach((m, idx) => {
           menuList += `${idx + 1}: ${m}\n`;
