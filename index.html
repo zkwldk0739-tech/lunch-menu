@@ -18,6 +18,7 @@
     .timer-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 10px; text-align: center; font-weight: 800; color: #dc2626; font-size: 0.95rem; margin-bottom: 20px; }
     .timer-box.active { background: #fee2e2; border-color: #ef4444; animation: pulse 1.5s infinite; }
     .timer-box.closed { background: #374151; border-color: #1f2937; color: #f9fafb; animation: none; }
+    .timer-box.unlocked { background: #f0fdf4; border-color: #86efac; color: #166534; animation: none; }
 
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
@@ -31,6 +32,7 @@
     .header-btns { display: flex; gap: 6px; }
     .admin-btn { font-size: 0.75rem; color: #4f46e5; background: #eeefff; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
     .lock-toggle-btn { font-size: 0.75rem; color: #dc2626; background: #fef2f2; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    .lock-toggle-btn.is-unlock { color: #16a34a; background: #f0fdf4; border-color: #86efac; }
 
     /* 👤 이름 선택 버튼 */
     .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -85,7 +87,7 @@
     .time-stamp { font-size: 0.8rem; color: #9ca3af; text-align: right; }
     .empty-msg { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 0.95rem; }
 
-    /* 📋 주문 모아보기 요약 카드 스타일 */
+    /* 📋 오늘 주문 모아보기 요약 카드 스타일 */
     .summary-card { background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08); }
     .summary-title { font-size: 1rem; color: #15803d; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
     .summary-rest-block { background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
@@ -106,7 +108,7 @@
 <div class="container">
   <h1>🍱 오늘의 점심 메뉴</h1>
   
-  <div class="timer-box" id="timerDisplay">⏱️ 타이머 로딩 중...</div>
+  <div class="timer-box" id="timerDisplay">⏱️ 상태 확인 중...</div>
 
   <div class="card">
     <div class="card-title">
@@ -172,7 +174,12 @@
   };
 
   let teamMembers = JSON.parse(localStorage.getItem("lunchTeamMembers")) || Object.keys(defaultPins);
-  let isManualLock = false;
+  
+  // 마감 상태 상수 정의
+  // 'auto': 기본(12:00~12:05 자동 마감 체크)
+  // 'closed': 관리자가 수동 마감
+  // 'open': 관리자가 강제 해제 (시간 지나도 무조건 열림)
+  let lockState = 'auto'; 
 
   const restaurants = [
     { name: '제주국수', url: 'https://map.naver.com/p/entry/place/17924427', menus: ['멸치 고기국수', '닭곰탕', '순두부', '고기국수', '고기국수 (양 많이)'] },
@@ -220,17 +227,19 @@
     });
   }
 
+  // DB에서 마감 설정 정보 감지
   function listenLockStatus() {
     db.collection("settings").doc("lunchLock").onSnapshot(doc => {
-      if (doc.exists) {
-        isManualLock = doc.data().isClosed || false;
+      if (doc.exists && doc.data().state) {
+        lockState = doc.data().state;
       } else {
-        isManualLock = false;
+        lockState = 'auto';
       }
       checkTimerAndLock();
     });
   }
 
+  // 타이머 및 마감 상태 통합 판단
   function checkTimerAndLock() {
     const now = new Date();
     const timerBox = document.getElementById("timerDisplay");
@@ -241,53 +250,72 @@
     const end = new Date(now);
     end.setHours(12, 5, 0, 0);
 
-    let isTimeClosed = false;
+    let isClosedFinal = false;
 
-    if (now < start) {
-      timerBox.className = "timer-box";
-      timerBox.innerHTML = `⌛ 12:00부터 5분 타이머가 시작됩니다`;
-    } else if (now >= start && now <= end) {
-      const diffSec = Math.floor((end - now) / 1000);
-      const m = Math.floor(diffSec / 60);
-      const s = diffSec % 60;
-      timerBox.className = "timer-box active";
-      timerBox.innerHTML = `🚨 주문 마감까지: 0${m}:${s < 10 ? '0' : ''}${s}`;
+    if (lockState === 'closed') {
+      // 1. 수동 마감
+      isClosedFinal = true;
+      timerBox.className = "timer-box closed";
+      timerBox.innerText = "🚨 관리자에 의해 선택이 마감되었습니다";
+    } else if (lockState === 'open') {
+      // 2. 수동 강제 해제 (시간 조건 무시하고 오픈)
+      isClosedFinal = false;
+      timerBox.className = "timer-box unlocked";
+      timerBox.innerText = "🟢 관리자 권한으로 마감이 해제되었습니다";
     } else {
-      isTimeClosed = true;
+      // 3. auto (12:00 ~ 12:05 타이머 기반)
+      if (now < start) {
+        isClosedFinal = false;
+        timerBox.className = "timer-box";
+        timerBox.innerText = `⌛ 12:00부터 5분 타이머가 시작됩니다`;
+      } else if (now >= start && now <= end) {
+        isClosedFinal = false;
+        const diffSec = Math.floor((end - now) / 1000);
+        const m = Math.floor(diffSec / 60);
+        const s = diffSec % 60;
+        timerBox.className = "timer-box active";
+        timerBox.innerText = `🚨 주문 마감까지: 0${m}:${s < 10 ? '0' : ''}${s}`;
+      } else {
+        isClosedFinal = true;
+        timerBox.className = "timer-box closed";
+        timerBox.innerText = "🚨 12:05 마감 완료되었습니다";
+      }
     }
 
-    const finalClosed = isManualLock || isTimeClosed;
-    applyLockUI(finalClosed, isTimeClosed);
+    applyLockUI(isClosedFinal);
   }
 
-  function applyLockUI(isClosed, isTimeClosed) {
-    const timerBox = document.getElementById("timerDisplay");
+  function applyLockUI(isClosed) {
     const lockBtn = document.getElementById("lockBtn");
     const submitBtn = document.getElementById("submitBtn");
     const spinBtn = document.getElementById("spinBtn");
     const restBtns = document.querySelectorAll(".rest-select-btn");
 
     if (isClosed) {
-      timerBox.className = "timer-box closed";
-      timerBox.innerText = isTimeClosed ? "🚨 12:05 마감 완료되었습니다" : "🚨 관리자에 의해 선택이 마감되었습니다";
       submitBtn.disabled = true;
       spinBtn.disabled = true;
       restBtns.forEach(btn => btn.disabled = true);
+      lockBtn.innerText = "🔓 마감 해제";
+      lockBtn.classList.add("is-unlock");
     } else {
       submitBtn.disabled = false;
       spinBtn.disabled = false;
       restBtns.forEach(btn => btn.disabled = false);
+      lockBtn.innerText = "🔒 마감하기";
+      lockBtn.classList.remove("is-unlock");
     }
-
-    lockBtn.innerText = isManualLock ? "🔓 마감 해제" : "🔒 마감하기";
   }
 
+  // 관리자 마감 토글
   function toggleLock() {
     const adminPwd = prompt("마감 상태를 변경하려면 관리자 비밀번호를 입력하세요:");
     if (adminPwd === "0410") {
-      const nextState = !isManualLock;
-      db.collection("settings").doc("lunchLock").set({ isClosed: nextState }).then(() => {
-        alert(nextState ? "🔒 마감되었습니다." : "🔓 마감이 해제되었습니다.");
+      // 토글 논리: 현재 마감 상태라면 강제 오픈('open'), 열려있다면 강제 마감('closed')
+      const isCurrentlyClosed = document.getElementById("submitBtn").disabled;
+      const nextState = isCurrentlyClosed ? 'open' : 'closed';
+
+      db.collection("settings").doc("lunchLock").set({ state: nextState }).then(() => {
+        alert(nextState === 'closed' ? "🔒 마감되었습니다." : "🔓 마감이 해제되었습니다. 시간과 관계없이 제출 가능합니다.");
       });
     } else if (adminPwd !== null) {
       alert("❌ 관리자 비밀번호가 일치하지 않습니다!");
