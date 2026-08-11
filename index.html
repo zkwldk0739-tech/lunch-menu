@@ -28,20 +28,18 @@
     .card { background: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
     .card-title { font-size: 0.95rem; color: #4b5563; margin-bottom: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
 
-    /* 👤 이름 선택 버튼 & 고정 스타일 */
+    /* 👤 이름 선택 버튼 */
     .name-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
     .name-btn { flex: 1; min-width: 90px; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #374151; padding: 10px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; }
     .name-btn.active { background: #6366f1; border-color: #6366f1; color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-    .name-btn:disabled { background: #f3f4f6; border-color: #e5e7eb; color: #9ca3af; cursor: not-allowed; opacity: 0.5; }
-    
-    .reset-name-btn { font-size: 0.75rem; color: #ef4444; text-decoration: underline; cursor: pointer; background: none; border: none; font-weight: 600; }
+
+    .admin-btn { font-size: 0.75rem; color: #4f46e5; background: #eeefff; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
     /* 🏪 식당 그리드 */
     .restaurant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .rest-select-btn { background: #ffffff; border: 1px solid #e5e7eb; color: #4b5563; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; }
     .rest-select-btn.active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
     
-    /* 🎲 랜덤 바운스 애니메이션 스타일 */
     .rest-select-btn.highlight {
       background: #ff9f43 !important;
       color: #ffffff !important;
@@ -65,7 +63,6 @@
     .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; width: 100%; }
     .spin-btn:active { transform: scale(0.97); }
 
-    /* 🗑️ 전체 삭제 버튼 스타일 */
     .clear-all-btn { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 4px 8px; font-size: 0.75rem; font-weight: 700; border-radius: 6px; cursor: pointer; }
 
     .status-list { list-style: none; }
@@ -97,8 +94,8 @@
 
   <div class="card">
     <div class="card-title">
-      👤 내 이름 선택 (기기 고정)
-      <button class="reset-name-btn" onclick="resetMyName()">🔒 이름 변경하기</button>
+      👤 내 이름 선택
+      <button class="admin-btn" onclick="manageNames()">⚙️ 이름 관리</button>
     </div>
     <div class="name-grid" id="nameGrid"></div>
     <input type="hidden" id="userName">
@@ -122,10 +119,8 @@
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
-    <!-- 출발 알리기 버튼 -->
     <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
 
-    <!-- 🎲 출발 버튼 밑으로 이동한 식당 랜덤 뽑기 박스 -->
     <div class="random-box">
       <button class="spin-btn" id="spinBtn" onclick="spinRandomRest()">🎲 식당 랜덤 뽑기!</button>
     </div>
@@ -144,7 +139,7 @@
 </div>
 
 <script>
-  const teamMembers = ['김현수', '김진석', '서인태'];
+  let teamMembers = JSON.parse(localStorage.getItem("lunchTeamMembers")) || ['김현수', '김진석', '서인태'];
 
   const restaurants = [
     { name: '제주국수', url: 'https://map.naver.com/p/entry/place/17924427', menus: ['멸치 고기국수', '닭곰탕', '순두부', '고기국수', '고기국수 (양 많이)'] },
@@ -206,10 +201,12 @@
     }
   }
 
+  // 🔑 DB 기반 이름 검증 및 비밀번호 확인
+  let currentSelectedPin = "";
+
   function renderNameGrid() {
     const nameGrid = document.getElementById("nameGrid");
     const nameInput = document.getElementById("userName");
-    const savedName = localStorage.getItem("lunchUserNameFixed");
 
     nameGrid.innerHTML = "";
 
@@ -218,50 +215,79 @@
       btn.className = "name-btn";
       btn.innerText = member;
 
-      if (savedName) {
-        if (savedName === member) {
-          btn.classList.add("active");
-          nameInput.value = member;
-        } else {
-          btn.disabled = true;
-        }
+      if (nameInput.value === member) {
+        btn.classList.add("active");
       }
 
       btn.onclick = function() {
-        if (!localStorage.getItem("lunchUserNameFixed")) {
-          const pwd = prompt(`'${member}'님으로 이 기기에 고정합니다.\n변경 시 사용할 비밀번호 4자리를 설정해주세요:`);
-          if (pwd && pwd.length >= 4) {
-            localStorage.setItem("lunchUserNameFixed", member);
-            localStorage.setItem("lunchUserPin", pwd);
-            alert(`${member}님으로 등록되었습니다.`);
-            renderNameGrid();
+        // 이름 클릭 시 DB 검증
+        db.collection("users").doc(member).get().then((doc) => {
+          if (!doc.exists) {
+            // 1. 최초 설정
+            const newPin = prompt(`'${member}'님의 비밀번호 4자리를 신규 설정해주세요:`);
+            if (!newPin || newPin.trim() === "") return; // 취소 누르면 그냥 종료
+
+            if (newPin.length < 4) {
+              alert("비밀번호는 4자리 이상이어야 합니다.");
+              return;
+            }
+
+            db.collection("users").doc(member).set({ pin: newPin }).then(() => {
+              alert("비밀번호 설정 완료!");
+              setActiveName(member, newPin);
+            });
           } else {
-            alert("비밀번호 4자리 이상을 입력해야 등록됩니다.");
+            // 2. 기존 사용자 비밀번호 확인
+            const inputPin = prompt(`'${member}'님의 비밀번호 4자리를 입력해주세요:`);
+            if (!inputPin || inputPin.trim() === "") return; // 취소 누르면 재구속 없이 깔끔하게 창 닫힘
+
+            if (doc.data().pin === inputPin) {
+              setActiveName(member, inputPin);
+            } else {
+              alert("❌ 비밀번호가 일치하지 않습니다!");
+            }
           }
-        }
+        });
       };
+
       nameGrid.appendChild(btn);
     });
   }
 
-  function resetMyName() {
-    const savedName = localStorage.getItem("lunchUserNameFixed");
-    const savedPin = localStorage.getItem("lunchUserPin");
+  function setActiveName(name, pin) {
+    document.getElementById("userName").value = name;
+    currentSelectedPin = pin;
+    renderNameGrid();
+  }
 
-    if (!savedName) {
-      alert("고정된 이름이 없습니다.");
-      return;
-    }
-
-    const inputPwd = prompt(`'${savedName}'님의 설정된 비밀번호 4자리를 입력해주세요:`);
-    if (inputPwd === savedPin) {
-      localStorage.removeItem("lunchUserNameFixed");
-      localStorage.removeItem("lunchUserPin");
-      document.getElementById("userName").value = "";
-      alert("이름 고정이 해제되었습니다. 새로운 이름을 선택해주세요.");
-      renderNameGrid();
-    } else {
-      alert("❌ 비밀번호가 일치하지 않습니다!");
+  // ⚙️ 관리자 권한 기반 팀원 이름 삭제/추가 관리 (비밀번호: 0410)
+  function manageNames() {
+    const adminPwd = prompt("팀원 관리 권한을 위한 관리자 비밀번호를 입력하세요:");
+    if (adminPwd === "0410") {
+      const action = prompt("1: 팀원 추가, 2: 팀원 삭제 (숫자 선택)");
+      if (action === "1") {
+        const newMember = prompt("추가할 팀원 이름을 입력하세요:");
+        if (newMember && !teamMembers.includes(newMember)) {
+          teamMembers.push(newMember);
+          localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
+          renderNameGrid();
+          alert(`${newMember}님이 추가되었습니다.`);
+        }
+      } else if (action === "2") {
+        const delMember = prompt(`삭제할 팀원 이름을 입력하세요:\n현재 목록: ${teamMembers.join(', ')}`);
+        if (delMember && teamMembers.includes(delMember)) {
+          teamMembers = teamMembers.filter(m => m !== delMember);
+          localStorage.setItem("lunchTeamMembers", JSON.stringify(teamMembers));
+          db.collection("users").doc(delMember).delete(); // DB 비밀번호 데이터도 삭제
+          if (document.getElementById("userName").value === delMember) {
+            document.getElementById("userName").value = "";
+          }
+          renderNameGrid();
+          alert(`${delMember}님이 목록에서 삭제되었습니다.`);
+        }
+      }
+    } else if (adminPwd !== null) {
+      alert("❌ 관리자 비밀번호가 일치하지 않습니다!");
     }
   }
 
@@ -424,7 +450,7 @@
       snapshot.forEach((doc) => {
         const item = doc.data();
         const isSkip = item.rest.includes('점심 패스');
-        const myName = localStorage.getItem("lunchUserNameFixed");
+        const myName = document.getElementById("userName").value;
         const isMine = item.name === myName;
         
         html += `
