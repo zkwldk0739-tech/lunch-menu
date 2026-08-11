@@ -40,18 +40,18 @@
     .menu-list-view { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; max-height: 220px; overflow-y: auto; }
     .menu-tag { background: #ffffff; border: 1px solid #ddd6fe; color: #6d28d9; padding: 6px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 500; }
 
-    /* 🍽️ 대형 룰렛 디자인 (하단으로 배치) */
+    /* 🍽️ 대형 룰렛 디자인 */
     .roulette-container { text-align: center; padding: 16px 0; background: #f9fafb; border-radius: 16px; margin-bottom: 16px; border: 1px solid #f3f4f6; }
     .roulette-wrapper { position: relative; width: 320px; height: 320px; margin: 10px auto; }
     
-    /* 🔻 작아진 화살표 크기 */
+    /* 🔻 화살표 */
     .roulette-arrow { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 16px solid #ef4444; z-index: 10; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2)); }
     
     canvas#rouletteCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 6px 20px rgba(0,0,0,0.1); transition: transform 4s cubic-bezier(0.15, 0.9, 0.15, 1); }
     .spin-btn { background: linear-gradient(135deg, #ff9f43, #ff5252); color: white; border: none; padding: 10px 24px; font-size: 0.95rem; font-weight: 800; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 82, 82, 0.35); transition: transform 0.1s; margin-top: 6px; }
     .spin-btn:active { transform: scale(0.95); }
 
-    button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); }
+    button.primary-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); margin-top: 8px; }
 
     .status-list { list-style: none; }
     .status-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #f3f4f6; border-radius: 10px; margin-bottom: 4px; background: #fafafa; }
@@ -104,25 +104,27 @@
       <div class="menu-list-view" id="menuGrid"></div>
     </div>
 
-    <!-- 🎰 하단 배치된 룰렛 패널 -->
-    <div class="roulette-container">
-      <div class="card-title" style="justify-content:center; font-size:0.95rem; margin-bottom:2px;">🎰 선택 장애 방지! 룰렛 돌리기</div>
-      <div class="roulette-wrapper">
-        <div class="roulette-arrow"></div>
-        <canvas id="rouletteCanvas" width="320" height="320"></canvas>
-      </div>
-      <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">돌리기! 🎲</button>
-    </div>
-
     <button class="primary-btn" onclick="addStatus()">출발 알리기 🚀</button>
   </div>
 
+  <!-- 👥 팀원 실시간 현황 (룰렛 위로 이동) -->
   <div class="card">
     <div class="card-title">👀 팀원 실시간 현황</div>
     <ul class="status-list" id="statusList">
       <li class="empty-msg">불러오는 중...</li>
     </ul>
   </div>
+
+  <!-- 🎰 룰렛 패널 (현황 아래로 이동) -->
+  <div class="card roulette-container">
+    <div class="card-title" style="justify-content:center; font-size:0.95rem; margin-bottom:2px;">🎰 선택 장애 방지! 룰렛 돌리기</div>
+    <div class="roulette-wrapper">
+      <div class="roulette-arrow"></div>
+      <canvas id="rouletteCanvas" width="320" height="320"></canvas>
+    </div>
+    <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">돌리기! 🎲</button>
+  </div>
+
 </div>
 
 <script>
@@ -216,25 +218,35 @@
       ctx.fill();
 
       ctx.save();
-      ctx.fillStyle = "#ffffff";
       
-      // 글자 수에 따라 폰트 크기 유동적 조절 (진대광부대찌개 이탈 방지)
       const restName = restaurants[i].name;
+
+      // 폰트 크기 및 렌더링 위치 정밀 조율 (글씨 짤림 차단)
+      let fontSize = 13;
+      let textRadius = 80;
+
       if (restName.length >= 7) {
-        ctx.font = "bold 11px sans-serif";
+        fontSize = 10;
+        textRadius = 72; // 글자 수가 긴 경우 중심 쪽으로 당겨 분할선 이탈 방지
       } else if (restName.length >= 5) {
-        ctx.font = "bold 12px sans-serif";
-      } else {
-        ctx.font = "bold 13px sans-serif";
+        fontSize = 11;
+        textRadius = 76;
       }
 
-      ctx.shadowColor = "rgba(0,0,0,0.25)";
-      ctx.shadowBlur = 2;
-      
-      // 중심에서 88px 위치에 고정하여 테두리 밖으로 넘어가지 않도록 배치
-      ctx.translate(160 + Math.cos(angle + arc / 2) * 88, 160 + Math.sin(angle + arc / 2) * 88);
+      ctx.font = `bold ${fontSize}px sans-serif`;
+
+      // 텍스트 검은색 외곽선 추가 (가독성 증대)
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.lineWidth = 3;
+      ctx.fillStyle = "#ffffff";
+
+      ctx.translate(160 + Math.cos(angle + arc / 2) * textRadius, 160 + Math.sin(angle + arc / 2) * textRadius);
       ctx.rotate(angle + arc / 2 + Math.PI / 2);
-      ctx.fillText(restName, -ctx.measureText(restName).width / 2, 0);
+
+      const textWidth = ctx.measureText(restName).width;
+      ctx.strokeText(restName, -textWidth / 2, 0);
+      ctx.fillText(restName, -textWidth / 2, 0);
+      
       ctx.restore();
     }
   }
