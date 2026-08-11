@@ -81,14 +81,17 @@
     .time-stamp { font-size: 0.8rem; color: #9ca3af; text-align: right; }
     .empty-msg { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 0.95rem; }
 
-    /* 📋 식당 현장 주문용 요약 스타일 */
-    .summary-card { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 16px; padding: 18px; margin-bottom: 20px; }
-    .summary-title { font-size: 0.95rem; color: #166534; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .summary-rest-block { background: #ffffff; border: 1px solid #dcfce7; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
-    .summary-rest-name { font-weight: 800; color: #15803d; font-size: 0.95rem; margin-bottom: 6px; }
-    .summary-menu-item { font-size: 0.85rem; color: #374151; font-weight: 600; margin-bottom: 4px; padding-left: 4px; }
-    .summary-count { color: #16a34a; font-weight: 800; }
-    .summary-users { font-size: 0.8rem; color: #6b7280; font-weight: 500; }
+    /* 📋 직관적인 현장 주문용 요약 카드 강화 스타일 */
+    .summary-card { background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08); }
+    .summary-title { font-size: 1rem; color: #15803d; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .summary-rest-block { background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    .summary-rest-name { font-weight: 900; color: #166534; font-size: 1.1rem; margin-bottom: 10px; border-bottom: 2px dashed #dcfce7; padding-bottom: 6px; }
+    
+    .summary-menu-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 8px; }
+    .summary-menu-head { display: flex; justify-content: space-between; align-items: center; }
+    .summary-menu-name { font-size: 0.95rem; color: #0f172a; font-weight: 800; }
+    .summary-badge { background: #ef4444; color: white; font-weight: 800; font-size: 0.85rem; padding: 2px 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25); }
+    .summary-users-tag { font-size: 0.8rem; color: #475569; font-weight: 600; background: #e2e8f0; padding: 2px 8px; border-radius: 6px; width: fit-content; margin-top: 2px; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -137,9 +140,9 @@
     </div>
   </div>
 
-  <!-- 📋 현장 주문용 자동 합산 요약 카드 -->
+  <!-- 📋 현장 주문용 직관적 요약 카드 -->
   <div class="summary-card" id="summaryCard" style="display: none;">
-    <div class="summary-title">📋 식당 주문용 요약 합산</div>
+    <div class="summary-title">📋 식당 현장 주문용 요약</div>
     <div id="summaryContent"></div>
   </div>
 
@@ -516,7 +519,6 @@
     }
   }
 
-  // 실시간 현황 및 식당별 요약 집계 함수
   db.collection("lunch")
     .where("date", "==", getToday())
     .onSnapshot((snapshot) => {
@@ -531,7 +533,7 @@
       }
 
       let html = "";
-      const summaryData = {}; // 식당별/메뉴별 수량 집계용 객체
+      const summaryData = {};
 
       snapshot.forEach((doc) => {
         const item = doc.data();
@@ -539,7 +541,6 @@
         const myName = document.getElementById("userName").value;
         const isMine = item.name === myName;
         
-        // 1. 실시간 목록 생성
         html += `
           <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
             <div>
@@ -555,7 +556,6 @@
           </li>
         `;
 
-        // 2. 주문 요약 데이터 집계 (점심 패스 제외)
         if (!isSkip) {
           const rest = item.rest;
           const menu = item.menu || "메뉴 미선택";
@@ -569,7 +569,7 @@
 
       listEl.innerHTML = html;
 
-      // 3. 요약 카드 렌더링
+      // 3. 직관적인 요약 카드 렌더링
       let summaryHtml = "";
       const rests = Object.keys(summaryData);
 
@@ -579,9 +579,12 @@
           Object.keys(summaryData[rest]).forEach(menu => {
             const users = summaryData[rest][menu];
             summaryHtml += `
-              <div class="summary-menu-item">
-                • ${menu} <span class="summary-count">(${users.length}개)</span> 
-                <span class="summary-users">: ${users.join(', ')}</span>
+              <div class="summary-menu-row">
+                <div class="summary-menu-head">
+                  <span class="summary-menu-name">${menu}</span>
+                  <span class="summary-badge">${users.length}개</span>
+                </div>
+                <div class="summary-users-tag">👤 ${users.join(', ')}</div>
               </div>
             `;
           });
