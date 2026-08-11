@@ -80,6 +80,15 @@
     .map-btn { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #4f46e5; background: #eeefff; padding: 6px 10px; border-radius: 6px; font-weight: 600; text-decoration: none; }
     .time-stamp { font-size: 0.8rem; color: #9ca3af; text-align: right; }
     .empty-msg { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 0.95rem; }
+
+    /* 📋 식당 현장 주문용 요약 스타일 */
+    .summary-card { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 16px; padding: 18px; margin-bottom: 20px; }
+    .summary-title { font-size: 0.95rem; color: #166534; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .summary-rest-block { background: #ffffff; border: 1px solid #dcfce7; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+    .summary-rest-name { font-weight: 800; color: #15803d; font-size: 0.95rem; margin-bottom: 6px; }
+    .summary-menu-item { font-size: 0.85rem; color: #374151; font-weight: 600; margin-bottom: 4px; padding-left: 4px; }
+    .summary-count { color: #16a34a; font-weight: 800; }
+    .summary-users { font-size: 0.8rem; color: #6b7280; font-weight: 500; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -126,6 +135,12 @@
     <div class="random-box">
       <button class="spin-btn" id="spinBtn" onclick="spinRandomRest()">🎲 식당 랜덤 뽑기!</button>
     </div>
+  </div>
+
+  <!-- 📋 현장 주문용 자동 합산 요약 카드 -->
+  <div class="summary-card" id="summaryCard" style="display: none;">
+    <div class="summary-title">📋 식당 주문용 요약 합산</div>
+    <div id="summaryContent"></div>
   </div>
 
   <div class="card">
@@ -225,7 +240,6 @@
     const nameInput = document.getElementById("userName");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // 로컬 스토리지에서 영구 인증된 사용자 확인
     const savedUser = localStorage.getItem("lunchLoggedInUser");
     if (savedUser) {
       nameInput.value = savedUser;
@@ -246,7 +260,6 @@
       }
 
       btn.onclick = function() {
-        // 이미 본인으로 자동 로그인되어 있는 경우 비번 생략
         if (localStorage.getItem("lunchLoggedInUser") === member) {
           return;
         }
@@ -261,7 +274,6 @@
           if (!inputPin || inputPin.trim() === "") return;
 
           if (inputPin === targetPin) {
-            // 영구 로그인 정보 저장
             localStorage.setItem("lunchLoggedInUser", member);
             setActiveName(member);
           } else {
@@ -504,23 +516,30 @@
     }
   }
 
+  // 실시간 현황 및 식당별 요약 집계 함수
   db.collection("lunch")
     .where("date", "==", getToday())
     .onSnapshot((snapshot) => {
       const listEl = document.getElementById("statusList");
+      const summaryCard = document.getElementById("summaryCard");
+      const summaryContent = document.getElementById("summaryContent");
       
       if (snapshot.empty) {
         listEl.innerHTML = `<li class="empty-msg">아직 출발한 사람이 없습니다.</li>`;
+        summaryCard.style.display = "none";
         return;
       }
 
       let html = "";
+      const summaryData = {}; // 식당별/메뉴별 수량 집계용 객체
+
       snapshot.forEach((doc) => {
         const item = doc.data();
         const isSkip = item.rest.includes('점심 패스');
         const myName = document.getElementById("userName").value;
         const isMine = item.name === myName;
         
+        // 1. 실시간 목록 생성
         html += `
           <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
             <div>
@@ -535,8 +554,44 @@
             <div class="time-stamp">${item.time} ${isSkip ? '확인' : '출발'}</div>
           </li>
         `;
+
+        // 2. 주문 요약 데이터 집계 (점심 패스 제외)
+        if (!isSkip) {
+          const rest = item.rest;
+          const menu = item.menu || "메뉴 미선택";
+
+          if (!summaryData[rest]) summaryData[rest] = {};
+          if (!summaryData[rest][menu]) summaryData[rest][menu] = [];
+          
+          summaryData[rest][menu].push(item.name);
+        }
       });
+
       listEl.innerHTML = html;
+
+      // 3. 요약 카드 렌더링
+      let summaryHtml = "";
+      const rests = Object.keys(summaryData);
+
+      if (rests.length > 0) {
+        rests.forEach(rest => {
+          summaryHtml += `<div class="summary-rest-block"><div class="summary-rest-name">📍 ${rest}</div>`;
+          Object.keys(summaryData[rest]).forEach(menu => {
+            const users = summaryData[rest][menu];
+            summaryHtml += `
+              <div class="summary-menu-item">
+                • ${menu} <span class="summary-count">(${users.length}개)</span> 
+                <span class="summary-users">: ${users.join(', ')}</span>
+              </div>
+            `;
+          });
+          summaryHtml += `</div>`;
+        });
+        summaryContent.innerHTML = summaryHtml;
+        summaryCard.style.display = "block";
+      } else {
+        summaryCard.style.display = "none";
+      }
     });
 </script>
 
