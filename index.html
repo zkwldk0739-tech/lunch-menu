@@ -143,7 +143,7 @@
     </div>
   </div>
 
-  <!-- 📋 오늘 주문 모아보기 요약 카드 (12:05 이전/일찍 제출한 건만 자동 합산) -->
+  <!-- 📋 오늘 주문 모아보기 요약 카드 -->
   <div class="summary-card" id="summaryCard" style="display: none;">
     <div class="summary-title">📋 오늘 주문 모아보기</div>
     <div id="summaryContent"></div>
@@ -205,6 +205,14 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // 💡 정확한 한국 날짜(YYYY-MM-DD) 추출
+  function getToday() {
+    const d = new Date();
+    const offset = d.getTimezoneOffset() * 60000;
+    const dateOffset = new Date(d.getTime() - offset);
+    return dateOffset.toISOString().slice(0, 10);
+  }
+
   function initDefaultUserPins() {
     Object.keys(defaultPins).forEach(name => {
       const userRef = db.collection("users").doc(name);
@@ -216,7 +224,6 @@
     });
   }
 
-  // 상단 타이머 표시용 함수
   function updateTimerUI() {
     const now = new Date();
     const timerBox = document.getElementById("timerDisplay");
@@ -377,11 +384,111 @@
     }
   }
 
+  let unsubscribeLunch = null;
+
+  // 🔄 실시간 리스너 바인딩 함수 (날짜 자동 변경 대응)
+  function bindLunchListener() {
+    if (unsubscribeLunch) unsubscribeLunch();
+
+    const todayStr = getToday();
+
+    unsubscribeLunch = db.collection("lunch")
+      .where("date", "==", todayStr)
+      .onSnapshot((snapshot) => {
+        const listEl = document.getElementById("statusList");
+        const summaryCard = document.getElementById("summaryCard");
+        const summaryContent = document.getElementById("summaryContent");
+        
+        if (snapshot.empty) {
+          listEl.innerHTML = `<li class="empty-msg">아직 출발한 사람이 없습니다.</li>`;
+          summaryCard.style.display = "none";
+          return;
+        }
+
+        let html = "";
+        const summaryData = {};
+
+        snapshot.forEach((doc) => {
+          const item = doc.data();
+          const isSkip = item.rest.includes('점심 패스');
+          const myName = document.getElementById("userName").value;
+          const isMine = item.name === myName;
+          const isLate = item.isLate || false;
+          
+          html += `
+            <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
+              <div>
+                <div class="user-name-box">
+                  <span class="user-name">${item.name}</span>
+                  ${isLate ? `<span style="font-size:0.75rem; color:#dc2626; font-weight:800; background:#fee2e2; padding:2px 6px; border-radius:4px;">🚨 지각 제출</span>` : ''}
+                  ${isMine ? `<button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>` : ''}
+                </div>
+                <div class="restaurant-name">${isSkip ? '🙅‍♂️ 점심 패스' : '📍 ' + item.rest}</div>
+                ${!isSkip && item.menu ? `<div class="selected-menu-text">🍱 선택 메뉴: ${item.menu}</div>` : ''}
+                ${item.url ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="map-btn">🗺️ 지도에서 위치 보기</a>` : ''}
+              </div>
+              <div class="time-stamp">${item.time} ${isSkip ? '확인' : '출발'}</div>
+            </li>
+          `;
+
+          if (!isSkip && !isLate) {
+            const rest = item.rest;
+            const menu = item.menu || "메뉴 미선택";
+
+            if (!summaryData[rest]) summaryData[rest] = {};
+            if (!summaryData[rest][menu]) summaryData[rest][menu] = [];
+            
+            summaryData[rest][menu].push(item.name);
+          }
+        });
+
+        listEl.innerHTML = html;
+
+        let summaryHtml = "";
+        const rests = Object.keys(summaryData);
+
+        if (rests.length > 0) {
+          rests.forEach(rest => {
+            summaryHtml += `<div class="summary-rest-block"><div class="summary-rest-name">📍 ${rest}</div>`;
+            Object.keys(summaryData[rest]).forEach(menu => {
+              const users = summaryData[rest][menu];
+              summaryHtml += `
+                <div class="summary-menu-row">
+                  <div class="summary-menu-head">
+                    <span class="summary-menu-name">${menu}</span>
+                    <span class="summary-badge">${users.length}개</span>
+                  </div>
+                  <div class="summary-users-tag">👤 ${users.join(', ')}</div>
+                </div>
+              `;
+            });
+            summaryHtml += `</div>`;
+          });
+          summaryContent.innerHTML = summaryHtml;
+          summaryCard.style.display = "block";
+        } else {
+          summaryCard.style.display = "none";
+        }
+      });
+  }
+
+  let lastCheckedDate = getToday();
+
   window.onload = function() {
     initDefaultUserPins();
     renderNameGrid();
     updateTimerUI();
-    setInterval(updateTimerUI, 1000);
+    bindLunchListener();
+
+    setInterval(() => {
+      updateTimerUI();
+      // 날짜 변경 자정 감지 시 리스너 재연결
+      const currentDate = getToday();
+      if (currentDate !== lastCheckedDate) {
+        lastCheckedDate = currentDate;
+        bindLunchListener();
+      }
+    }, 1000);
   };
 
   function spinRandomRest() {
@@ -459,8 +566,6 @@
     }
   }
 
-  const getToday = () => new Date().toISOString().slice(0, 10);
-
   function addStatus() {
     const name = document.getElementById("userName").value;
     let restName = selectedRestName;
@@ -478,14 +583,11 @@
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // 💡 변경점: 12시 05분 '이후'(12:05 ~ 23:59)인 경우만 지각 처리!
-    // 12시 이전(예: 11시 30분 미리 클릭) 및 12:00 ~ 12:05 사이 제출은 모두 정상 인정
     const isLate = (hours === 12 && minutes >= 5) || hours > 12;
 
     const timeString = hours.toString().padStart(2, '0') + ":" + 
                        minutes.toString().padStart(2, '0');
 
-    // 12:05 이후일 경우에만 경고 팝업 안내
     if (isLate) {
       alert("🚨 마감 시간(12:05)이 지났습니다!\n메뉴가 [오늘 주문 모아보기] 주문서에 들어가지 않으니, 점심 담당자에게 직접 말씀해주세요!");
     }
@@ -537,87 +639,6 @@
       alert("❌ 관리자 비밀번호가 일치하지 않습니다!");
     }
   }
-
-  db.collection("lunch")
-    .where("date", "==", getToday())
-    .onSnapshot((snapshot) => {
-      const listEl = document.getElementById("statusList");
-      const summaryCard = document.getElementById("summaryCard");
-      const summaryContent = document.getElementById("summaryContent");
-      
-      if (snapshot.empty) {
-        listEl.innerHTML = `<li class="empty-msg">아직 출발한 사람이 없습니다.</li>`;
-        summaryCard.style.display = "none";
-        return;
-      }
-
-      let html = "";
-      const summaryData = {};
-
-      snapshot.forEach((doc) => {
-        const item = doc.data();
-        const isSkip = item.rest.includes('점심 패스');
-        const myName = document.getElementById("userName").value;
-        const isMine = item.name === myName;
-        const isLate = item.isLate || false;
-        
-        // 실시간 목록 표시 (지각 제출 시 표기)
-        html += `
-          <li class="status-item ${isSkip ? 'skip-lunch' : ''}">
-            <div>
-              <div class="user-name-box">
-                <span class="user-name">${item.name}</span>
-                ${isLate ? `<span style="font-size:0.75rem; color:#dc2626; font-weight:800; background:#fee2e2; padding:2px 6px; border-radius:4px;">🚨 지각 제출</span>` : ''}
-                ${isMine ? `<button class="delete-btn" onclick="deleteStatus('${item.name}')">❌ 취소</button>` : ''}
-              </div>
-              <div class="restaurant-name">${isSkip ? '🙅‍♂️ 점심 패스' : '📍 ' + item.rest}</div>
-              ${!isSkip && item.menu ? `<div class="selected-menu-text">🍱 선택 메뉴: ${item.menu}</div>` : ''}
-              ${item.url ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="map-btn">🗺️ 지도에서 위치 보기</a>` : ''}
-            </div>
-            <div class="time-stamp">${item.time} ${isSkip ? '확인' : '출발'}</div>
-          </li>
-        `;
-
-        // 12:05 이전/사전 정상 제출 건만 '주문 모아보기'(주문서)에 합산
-        if (!isSkip && !isLate) {
-          const rest = item.rest;
-          const menu = item.menu || "메뉴 미선택";
-
-          if (!summaryData[rest]) summaryData[rest] = {};
-          if (!summaryData[rest][menu]) summaryData[rest][menu] = [];
-          
-          summaryData[rest][menu].push(item.name);
-        }
-      });
-
-      listEl.innerHTML = html;
-
-      let summaryHtml = "";
-      const rests = Object.keys(summaryData);
-
-      if (rests.length > 0) {
-        rests.forEach(rest => {
-          summaryHtml += `<div class="summary-rest-block"><div class="summary-rest-name">📍 ${rest}</div>`;
-          Object.keys(summaryData[rest]).forEach(menu => {
-            const users = summaryData[rest][menu];
-            summaryHtml += `
-              <div class="summary-menu-row">
-                <div class="summary-menu-head">
-                  <span class="summary-menu-name">${menu}</span>
-                  <span class="summary-badge">${users.length}개</span>
-                </div>
-                <div class="summary-users-tag">👤 ${users.join(', ')}</div>
-              </div>
-            `;
-          });
-          summaryHtml += `</div>`;
-        });
-        summaryContent.innerHTML = summaryHtml;
-        summaryCard.style.display = "block";
-      } else {
-        summaryCard.style.display = "none";
-      }
-    });
 </script>
 
 </body>
